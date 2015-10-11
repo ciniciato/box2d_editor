@@ -253,8 +253,8 @@ var Objects = {
 			this.drawcontour(repos, this.rpoints);
 			
 			if (debugDraw.objects.selected() === this){
-				if (this.complex)
-					this.drawfixtures(repos);
+				//if (this.complex)
+					//this.drawfixtures(repos);
 			}
 			
 		}

@@ -10,9 +10,6 @@
 
         <script src="lib/jquery/jquery.js"></script>
         <script src="lib/jquery/jquery-ui.min.js"></script>
-        <link rel="stylesheet" href="lib/jquery/jquery-ui.structure.min.css">
-        <link rel="stylesheet" href="lib/jquery/jquery-ui.theme.min.css">
-        <link rel="stylesheet" href="lib/jquery/jquery-ui.min.css">
 
         <link rel="stylesheet" href="style.css">
         <script src="lib/Box2dWeb.min.js"></script>

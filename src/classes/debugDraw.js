@@ -112,8 +112,12 @@ debugDraw.Camera.update = function (){
 		x: debugDraw.Pointer.rX - this.position.x,
 		y: debugDraw.Pointer.rY - this.position.y
 	};
-	this.position.x = (this.free_position.x - this.size.width <= 0) ? this.size.width : this.free_position.x;
-	this.position.y = (this.free_position.y - this.size.height <= 0) ? this.size.height : this.free_position.y;
+	
+	this.free_position.x = (this.free_position.x - this.size.width < 0) ? this.size.width : this.free_position.x;
+	this.free_position.y = (this.free_position.y - this.size.height < 0) ? this.size.height : this.free_position.y;
+
+	this.position.x = this.free_position.x;
+	this.position.y = this.free_position.y;
 	debugDraw.ctx.translate((this.position_dif.x - this.position.x) * (World.scale * this.scale), 
 						    (this.position_dif.y - this.position.y) * (World.scale * this.scale)); 
 	this.position_dif.x = this.position.x;
@@ -146,6 +150,14 @@ debugDraw.keyboard = {
 		debugDraw.keyboard.keys[e.which] = 1;
 		debugDraw.Tools.onkeydown(e);
 		if (e.target === document.body)
+			if ((e.which == debugDraw.keyboard.key.BACKSPACE) ||
+			 (e.which == debugDraw.keyboard.key.ENTER) ||
+			 (e.which == debugDraw.keyboard.key.F8) ||
+			 (e.which == debugDraw.keyboard.key.DELETE) ||
+			 (e.which == debugDraw.keyboard.key.LEFT) ||
+			 (e.which == debugDraw.keyboard.key.UP) ||
+			 (e.which == debugDraw.keyboard.key.RIGHT) ||
+			 (e.which == debugDraw.keyboard.key.DOWNS))
 			e.preventDefault();
 	},
 	keypress : function(e){
@@ -159,7 +171,7 @@ debugDraw.keyboard = {
 	},
 	set: function(){
 		document.addEventListener('keydown', debugDraw.keyboard.keydown, true);
-		document.addEventListener('keypress', debugDraw.keyboard.keypress, true);
+		document.addEventListener('keypress', debugDraw.keyboard.keydown, true);
 		document.addEventListener('keyup', debugDraw.keyboard.keyup, true);
 	}
 } 

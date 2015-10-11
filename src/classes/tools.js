@@ -69,6 +69,152 @@ debugDraw.Tools.scroll = {
 	}
 }
 
+debugDraw.Tools.select_points = {
+	cursor: 'default',
+	drag: false,
+	move: false,
+	aabb: {x: null, xf: null, y: null, yf: null},
+	shape: null,
+	selectedpoints: [],
+	set : function(){
+		this.shape = debugDraw.objects.selected();	
+		this.selectedpoints = [];
+	},
+	onclick: function(){
+		if ((debugDraw.keyboard.keys[debugDraw.keyboard.key.CTRL])){
+			this.drag = false;
+			this.move = true;
+		} else {
+			this.selectedpoints = [];
+			this.aabb.x = debugDraw.Pointer.rX;
+			this.aabb.y = debugDraw.Pointer.rY;
+			this.aabb.xf = debugDraw.Pointer.rX;
+			this.aabb.yf = debugDraw.Pointer.rY;
+			this.drag = true;
+			this.move = false;
+		}
+	},
+	onmove: function(){
+		if (this.drag){
+			this.aabb.xf = debugDraw.Pointer.rX;
+			this.aabb.yf = debugDraw.Pointer.rY;
+			for (var i = 0; i < this.shape.points.length; i++){
+				if ((this.aabb.x > this.shape.points[i].x && this.aabb.xf < this.shape.points[i].x &&
+					this.aabb.y > this.shape.points[i].y && this.aabb.yf < this.shape.points[i].y) ||
+					(this.aabb.x < this.shape.points[i].x && this.aabb.xf > this.shape.points[i].x &&
+					this.aabb.y < this.shape.points[i].y && this.aabb.yf > this.shape.points[i].y) ||
+					(this.aabb.x > this.shape.points[i].x && this.aabb.xf < this.shape.points[i].x &&
+					this.aabb.y < this.shape.points[i].y && this.aabb.yf > this.shape.points[i].y) ||
+					(this.aabb.x < this.shape.points[i].x && this.aabb.xf > this.shape.points[i].x &&
+					this.aabb.y > this.shape.points[i].y && this.aabb.yf < this.shape.points[i].y)){
+					for (var k = 0; k < this.selectedpoints.length; k++){
+						if (this.selectedpoints[k] === this.shape.points[i])
+							break;
+					}
+					if (k == this.selectedpoints.length)
+						this.selectedpoints.push(this.shape.points[i]);
+				}
+			}
+		} else {
+		if ((debugDraw.keyboard.keys[debugDraw.keyboard.key.CTRL] && this.move))
+			if (this.selectedpoints.length > 0){
+				if (debugDraw.Pointer.DragX - debugDraw.Pointer.rX != 0 &&
+						debugDraw.Pointer.DragY - debugDraw.Pointer.rY != 0){
+					for (var i = 0; i < this.selectedpoints.length; i++){
+						this.selectedpoints[i].x -= (debugDraw.Pointer.DragX - debugDraw.Pointer.rX); 
+						this.selectedpoints[i].y -= (debugDraw.Pointer.DragY - debugDraw.Pointer.rY);
+						for (var k = 0; k < this.shape.cpoints.length; k++){
+							if (this.shape.cpoints[k].point === this.selectedpoints[i]){
+								this.shape.cpoints[k].x -= (debugDraw.Pointer.DragX - debugDraw.Pointer.rX); 
+								this.shape.cpoints[k].y -= (debugDraw.Pointer.DragY - debugDraw.Pointer.rY);
+							}
+						}
+					}
+					debugDraw.Pointer.DragX = debugDraw.Pointer.rX;
+					debugDraw.Pointer.DragY = debugDraw.Pointer.rY;
+					this.shape.update();
+				}
+			}
+		}
+	},
+	onup: function(){
+		this.drag = false;
+		this.move = false;
+	},
+	onkeydown: function(key){
+	}, 	
+	onkeyup: function(key){
+	},
+	draw: function(repos){
+		if (this.drag){
+			debugDraw.ctx.beginPath();
+			debugDraw.ctx.rect(this.aabb.x * repos, this.aabb.y * repos,
+							(this.aabb.xf - this.aabb.x) * repos, 
+							(this.aabb.yf - this.aabb.y) * repos);
+			debugDraw.ctx.stroke();
+		}
+		debugDraw.ctx.lineWidth = 2;
+		debugDraw.ctx.strokeStyle = 'rgba(0, 0, 0, .7)';
+		debugDraw.ctx.fillStyle = 'rgba(0, 0, 0, .9)';
+		//anchor points
+		for (var k = 0; k < this.selectedpoints.length; k++){
+			debugDraw.ctx.beginPath();
+			debugDraw.ctx.arc(this.selectedpoints[k].x * repos,
+					 		  this.selectedpoints[k].y * repos, 5, 0, 2*Math.PI);
+			debugDraw.ctx.stroke();
+		}
+	}
+}
+
+debugDraw.Tools.remove_anchor_point = {
+	cursor: 'none',
+	shape: null,
+	set : function(){
+		this.shape = debugDraw.objects.selected();	
+	},
+	onclick: function(){
+		for (var i = 0; i < this.shape.points.length; i++){
+			var dx = Math.pow(this.shape.points[i].x - debugDraw.Pointer.rX, 2),
+				dy = Math.pow(this.shape.points[i].y - debugDraw.Pointer.rY, 2);
+			if (Math.sqrt(dx + dy) <= .1) {
+				break;
+			}
+		}
+		if (i < this.shape.points.length){
+			for (var k = 0; k < this.shape.cpoints.length; k++){
+				if (this.shape.cpoints[k].point === this.shape.points[i]){
+					this.shape.cpoints.splice(k, 1);
+					k--;
+				}
+			}
+			this.shape.points.splice(i, 1);
+			this.shape.update();
+		}
+	},
+	onmove: function(){
+	},
+	onup: function(){
+	},
+	onkeydown: function(key){
+	}, 	
+	onkeyup: function(key){
+	},
+	draw: function(repos){
+		if (this.shape != null){
+			debugDraw.ctx.lineWidth = 2;
+			debugDraw.ctx.strokeStyle = 'rgba(0, 0, 0, .7)';
+			debugDraw.ctx.fillStyle = 'rgba(0, 0, 0, .9)';
+			//anchor points
+			for (var k = 0; k < this.shape.points.length; k++){
+				debugDraw.ctx.beginPath();
+				debugDraw.ctx.arc(this.shape.points[k].x * repos,
+						 		  this.shape.points[k].y * repos, 5, 0, 2*Math.PI);
+				debugDraw.ctx.stroke();
+			}
+		}
+	}
+}
+
 debugDraw.Tools.transform = {
 	cursor: 'default',
 	shape: null,

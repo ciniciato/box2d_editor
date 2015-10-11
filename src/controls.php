@@ -9,7 +9,7 @@
                     </div>
                 </div>
                 <div class="button">
-                    <div id="ttselectpoints" onClick="Controls.event(['tools', 'add_anchor']);">
+                    <div id="ttselectpoints" onClick="Controls.event(['tools', 'select_points']);">
                         <img src="img/icon_selectpoint.png">
                     </div>
                     <div class="mdl-tooltip" for="ttselectpoints">
@@ -374,6 +374,18 @@
         this.panels.tools.DOM.pen.event = function(){
             debugDraw.Tools.set('pen');
             Controls.log('pen tool');
+        }
+        //select_points remove_anchor_point
+        this.panels.tools.add('select_points');
+        this.panels.tools.DOM.select_points.event = function(){
+            debugDraw.Tools.set('select_points');
+            Controls.log('select points tool');
+        }
+
+        this.panels.tools.add('remove_anchor_point');
+        this.panels.tools.DOM.remove_anchor_point.event = function(){
+            debugDraw.Tools.set('remove_anchor_point');
+            Controls.log('remove anchor point tool');
         }
 
         this.panels.tools.add('addbody');
