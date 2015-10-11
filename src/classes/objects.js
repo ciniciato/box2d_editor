@@ -27,6 +27,14 @@ var Objects = {
 		this.properties.push({name:'linearDamping', val: '0'}); 
 		this.properties.push({name:'angularDamping', val: '0'}); 
 		this.properties.push({name:'fixedRotation', val: 'false'}); 
+
+		this.property = function(_prop){
+			for (var i = 0; i < this.properties.length; i++)
+				if (this.properties[i].name == _prop){
+					return this.properties[i];
+					break;
+				}
+		}
 	},
 	shape: function(_id, _args){
 		this.ind  = _id;
@@ -37,7 +45,8 @@ var Objects = {
 		this.parent = _args.parent;
 		this.parent.children.push(this.ind);
 		this.children = [];
-		this.complex = false;
+		this.complex  = false;
+		this.isClosed = false;//true if is a closed polygon, last point == first point
 
 		this.angle  = 0;
 		this.aabb = {x: 0, y: 0, xf: 0, yf: 0};
@@ -57,9 +66,10 @@ var Objects = {
 							   y: point.y,
 							   point: this.points[this.points.length-1]});
 			this.update();
-
 		}
-		this.points.push(_args.origin)
+
+		this.points.push(_args.origin);
+		this.origin = {x: _args.origin.x, y: _args.origin.y};
 		this.cpoints.push({x: _args.origin.x,
 						   y: _args.origin.y,
 						   point: this.points[this.points.length-1]});	
@@ -80,7 +90,7 @@ var Objects = {
 		this.properties.push({name:'name',        val: this.name}); 
 		this.properties.push({name:'type',        val: _args.type});
 		this.properties.push({name:'threshold',   val: '.05'});
-		this.properties.push({name:'simplify',    val: '100'});
+		this.properties.push({name:'simplify',    val: '10000'});
 		this.properties.push({name:'thick', 	  val: '0'});
 		this.properties.push({name:'density',     val: '1'}); 
 		this.properties.push({name:'friction',    val: '1'}); 
@@ -96,24 +106,43 @@ var Objects = {
 		}
 
 		this.update = function(){
+			var that = this;
+			function setaabb(ind){
+		    	that.aabb.x  = (that.aabb.x < that.rpoints[ind].x && that.aabb.x != null) ? 
+		    					that.aabb.x : that.rpoints[ind].x;
+				that.aabb.xf = (that.aabb.xf > that.rpoints[ind].x && that.aabb.xf != null) ? 
+								that.aabb.xf : that.rpoints[ind].x;
+				that.aabb.y  = (that.aabb.y < that.rpoints[ind].y && that.aabb.y != null) ? 
+								that.aabb.y : that.rpoints[ind].y;
+				that.aabb.yf = (that.aabb.yf > that.rpoints[ind].y && that.aabb.yf != null) ? 
+								that.aabb.yf : that.rpoints[ind].y;
+			}
+			//getting properties
 			var threshold = parseFloat(this.property('threshold').val),
 				simplify = parseFloat(this.property('simplify').val);
+			//clear all acessories points[renderer, fixture]
 			this.rpoints = [];
 			this.fpoints = [];
-			//bezier interpolation
+			//bezier interpolation and aabb setting
+			this.aabb.y  = null;
+			this.aabb.yf = null;
+			this.aabb.x  = null;
+			this.aabb.xf = null;
 			for (var k = 1; k < this.cpoints.length; k += 2){
 				if (this.cpoints[k+1] != undefined)
 	    			if ((this.cpoints[k].point.x == this.cpoints[k].x && this.cpoints[k].point.y == this.cpoints[k].y) &&
 	    					(this.cpoints[k+1].point.x == this.cpoints[k+1].x && this.cpoints[k+1].point.y == this.cpoints[k+1].y)){
 	    				this.rpoints.push({x: this.cpoints[k].point.x, y: this.cpoints[k].point.y});
+	    				setaabb(this.rpoints.length-1);
 	    				this.rpoints.push({x: this.cpoints[k+1].point.x, y: this.cpoints[k+1].point.y});
+	    				setaabb(this.rpoints.length-1);
 	    			} 
 	    			else
 			    		for (var t = 0.0; t <= 1.00001; t += threshold) {
-			    			newpoint =  {x: Math.round(bezierInterpolation(t, this.cpoints[k].point.x, this.cpoints[k].x, 
-			    							this.cpoints[k+1].x, this.cpoints[k+1].point.x)*100)/100,
-			    						 y: Math.round(bezierInterpolation(t, this.cpoints[k].point.y, this.cpoints[k].y, 
-			    							this.cpoints[k+1].y, this.cpoints[k+1].point.y)*100)/100};
+			    			newpoint =  {x: bezierInterpolation(t, this.cpoints[k].point.x, this.cpoints[k].x, 
+			    							this.cpoints[k+1].x, this.cpoints[k+1].point.x),
+			    						 y: bezierInterpolation(t, this.cpoints[k].point.y, this.cpoints[k].y, 
+			    							this.cpoints[k+1].y, this.cpoints[k+1].point.y)};
 			    			if (this.rpoints[this.rpoints.length-2] != undefined && (t + threshold < 1)){
 				    			var pb = this.rpoints[this.rpoints.length-1],
 				    				pa = this.rpoints[this.rpoints.length-2];
@@ -121,26 +150,68 @@ var Objects = {
 				    				this.rpoints.splice(this.rpoints.length-1, 1);
 			    			}
 			    			this.rpoints.push(newpoint);
+	    					setaabb(this.rpoints.length-1);
 			    		}
 	    	}
+	    	//remove duplicate points
 			this.rpoints = this.rpoints.removeDuplicates();
 	    	//triangulation
 	    	this.complex = false;
 			if (Box2d.Math.ClockWise(this.rpoints) === CLOCKWISE)
 				this.rpoints.reverse();
 			if (Box2d.Math.Convex(this.rpoints) === CONCAVE){
-				this.complex = true;
 				this.fpoints = Box2d.Math.process(this.rpoints);
+				this.complex = (this.fpoints == null) ? null : true;
 				if (this.fpoints == null) this.fpoints = [];
 				this.property('fixtures').val = Math.round(this.fpoints.length/3);
 			} else{
 				this.property('fixtures').val = 1;
 				this.fpoints = this.rpoints;
 			}
+			var elem = $("#div_properties #properties_shape #field_fixtures");
+   			elem.val(this.property('fixtures').val);
+
+			this.origin = {x: (this.aabb.x + this.aabb.xf) / 2,
+							y: (this.aabb.y + this.aabb.yf) / 2};
+
+			//define points based on scale and redifine aabb			
+			if (this.scale.x != 1 || this.scale.y != 1){
+				var midpoint = {x: (this.aabb.xf + this.aabb.x) / 2,
+								y: (this.aabb.yf + this.aabb.y) / 2};
+
+				this.aabb.y  = null;
+				this.aabb.yf = null;
+				this.aabb.x  = null;
+				this.aabb.xf = null;
+
+				for (var i = 0; i < this.rpoints.length; i++){
+					this.rpoints[i].x = midpoint.x + (this.rpoints[i].x - midpoint.x) * this.scale.x;
+					this.rpoints[i].y = midpoint.y + (this.rpoints[i].y - midpoint.y) * this.scale.y;
+					this.aabb.x  = (this.aabb.x < this.rpoints[i].x && this.aabb.x != null) ? this.aabb.x : this.rpoints[i].x;
+					this.aabb.xf = (this.aabb.xf > this.rpoints[i].x && this.aabb.xf != null) ? this.aabb.xf : this.rpoints[i].x;
+					this.aabb.y  = (this.aabb.y < this.rpoints[i].y && this.aabb.y != null) ? this.aabb.y : this.rpoints[i].y;
+					this.aabb.yf = (this.aabb.yf > this.rpoints[i].y && this.aabb.yf != null) ? this.aabb.yf : this.rpoints[i].y;
+				}
+			}							 
+		}
+
+		this.updatescale = function(){
+			var midpoint = {x: (this.aabb.xf + this.aabb.x) / 2,
+							y: (this.aabb.yf + this.aabb.y) / 2};
+			for (var i = 0; i < this.cpoints.length; i++){
+				this.cpoints[i].x = midpoint.x + (this.cpoints[i].x - midpoint.x) * this.scale.x;
+				this.cpoints[i].y = midpoint.y + (this.cpoints[i].y - midpoint.y) * this.scale.y;
+				if (this.points[i] != undefined){
+					this.points[i].x = midpoint.x + (this.points[i].x - midpoint.x) * this.scale.x;
+					this.points[i].y = midpoint.y + (this.points[i].y - midpoint.y) * this.scale.y;
+				}
+			}
+			this.scale.x = 1;
+			this.scale.y = 1;
 		}
 
 		this.drawfixtures = function(repos){
-			debugDraw.ctx.lineWidth = 3;
+			debugDraw.ctx.lineWidth = 2;
 			debugDraw.ctx.strokeStyle = 'rgba(133, 86, 212, .7)';
 			debugDraw.ctx.fillStyle = 'rgba(133, 86, 212, .3)';
 			for (var k = 0; k < this.fpoints.length; k += 3)
@@ -155,64 +226,37 @@ var Objects = {
 					debugDraw.ctx.lineTo(this.fpoints[k].x * repos,
 						 		     	 this.fpoints[k].y * repos);
 					debugDraw.ctx.stroke();
-					debugDraw.ctx.fill();
 				}
 		} 
 
 		this.drawcontour = function(repos, points){
-			debugDraw.ctx.lineWidth = 2;
+			debugDraw.ctx.lineWidth = 1;
 			debugDraw.ctx.beginPath();
 			debugDraw.ctx.fillStyle = 'rgba(255, 198, 0, .7)';
 			debugDraw.ctx.strokeStyle = 'rgba(0, 0, 0, .7)';
 			for (var k = 0; k < points.length; k ++){
 				debugDraw.ctx.lineTo(points[k].x * repos,
 			    	 		     	 points[k].y * repos);
-					debugDraw.ctx.arc(points[k].x * repos,
-						 		  points[k].y * repos, 2, 0, 2*Math.PI);
 			}
-			if (debugDraw.objects.selected() !== this || this.complex == false)
+			if (this.isClosed)
+				debugDraw.ctx.lineTo(points[0].x * repos,
+			    	 		     	 points[0].y * repos);
+			if (this.complex == false || this.complex == true)
 				debugDraw.ctx.fill();
 			debugDraw.ctx.stroke();
-		}
-
-		this.drawvectorpoints = function(repos){
-			debugDraw.ctx.lineWidth = 6;
-			debugDraw.ctx.strokeStyle = 'rgba(0, 0, 0, .7)';
-			for (var k = 0; k < this.points.length; k++){
-				debugDraw.ctx.beginPath();
-				debugDraw.ctx.arc(this.points[k].x * repos,
-						 		  this.points[k].y * repos, 5, 0, 2*Math.PI);
-				debugDraw.ctx.stroke();
-			}
-			for (var k = 0; k < this.cpoints.length; k++){
-				debugDraw.ctx.beginPath();
-				debugDraw.ctx.moveTo(this.cpoints[k].point.x * repos,
-									this.cpoints[k].point.y * repos);
-				debugDraw.ctx.lineTo(this.cpoints[k].x * repos,
-						 		  	this.cpoints[k].y * repos);
-				debugDraw.ctx.stroke();
-			}
-			debugDraw.ctx.strokeStyle = 'rgba(255, 198, 0, .7)';
-			for (var k = 0; k < this.cpoints.length; k++){
-				debugDraw.ctx.beginPath();
-				if ((this.cpoints[k].x != this.cpoints[k].point.x) ||
-					(this.cpoints[k].y != this.cpoints[k].point.y))
-					debugDraw.ctx.arc(this.cpoints[k].x * repos,
-						 		  this.cpoints[k].y * repos, 5, 0, 2*Math.PI);
-				debugDraw.ctx.stroke();
-			}
 		}
 
 		this.draw = function(repos){
 	    	debugDraw.ctx.lineCap = "round";
 			debugDraw.ctx.lineJoin = "round";
 			debugDraw.ctx.lineWidth = 6;
+			this.drawcontour(repos, this.rpoints);
+			
 			if (debugDraw.objects.selected() === this){
 				if (this.complex)
 					this.drawfixtures(repos);
-				this.drawvectorpoints(repos);
 			}
-			this.drawcontour(repos, this.rpoints);
+			
 		}
 	},
 	joint: {

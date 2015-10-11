@@ -1,6 +1,6 @@
-
 debugDraw.Tools = {
 	list: [],
+	history: [],
 	selected: null,
 	selectedpoints: [],
 	init: function(){
@@ -8,6 +8,7 @@ debugDraw.Tools = {
 	set: function(id){
 		if (this.selected !== this[id]){
 			this.selected = this[id];
+			this.history.push(id);
 			debugDraw.canvas.style.cursor = this[id].cursor;
 			this.selected.set();
 		}
@@ -24,18 +25,21 @@ debugDraw.Tools = {
 		if (this.selected != undefined)
 			this.selected.onup();
 	},
-	onkeydown: function(key){
-		if (key == debugDraw.keyboard.key.SPACE)
+	onkeydown: function(e){
+		if (e.which == debugDraw.keyboard.key.SPACE)
 			this.set('scroll');
 		if (this.selected != undefined)
-			this.selected.onkeydown();
+			this.selected.onkeydown(e);
 	},
-	onkeyup: function(key){
+	onkeyup: function(e){
 		if (this.selected != undefined)
-			this.selected.onkeyup();
+			this.selected.onkeyup(e);
+	},
+	draw: function(repos){
+		if (this.selected != undefined)
+			this.selected.draw(repos);
 	}
 };
-
 
 debugDraw.Tools.scroll = {
 	cursor: 'grab',
@@ -46,7 +50,7 @@ debugDraw.Tools.scroll = {
 	},
 	onmove: function(){
 		if (!debugDraw.keyboard.keys[debugDraw.keyboard.key.SPACE])
-			debugDraw.Tools.set('line');
+			debugDraw.Tools.set(debugDraw.Tools.history[debugDraw.Tools.history.length-2]);
 		else if (debugDraw.Pointer.isDown){
 			var dx = debugDraw.Pointer.rX - debugDraw.Pointer.DragX; 
 			var dy = debugDraw.Pointer.rY - debugDraw.Pointer.DragY; 
@@ -58,14 +62,189 @@ debugDraw.Tools.scroll = {
 		debugDraw.canvas.style.cursor = 'grab'
 	},
 	onkeydown: function(key){
-	},
+	}, 	
 	onkeyup: function(key){
+	},
+	draw: function(){
 	}
 }
 
-debugDraw.Tools.line = {
+debugDraw.Tools.transform = {
+	cursor: 'default',
+	shape: null,
+	points: [],
+	selected: null,
+	midpoint: {x: 0, y: 0},
+	size: {width: 0, height: 0},
+	oldsize: {width: 0, height: 0},
+	set : function(){
+		if (this.shape != null)
+			this.update();
+	},
+	onclick: function(){
+		for (var i = 0; i < this.points.length; i++){
+				var dx = Math.pow(this.points[i].x - debugDraw.Pointer.rX, 2),
+					dy = Math.pow(this.points[i].y - debugDraw.Pointer.rY, 2);
+				if (Math.sqrt(dx + dy) <= .1) {
+					this.selected = i;
+					this.midpoint   = {x: (this.shape.aabb.xf + this.shape.aabb.x) / 2,
+										y: (this.shape.aabb.yf + this.shape.aabb.y) / 2};
+					this.oldsize = {width: (this.shape.aabb.xf - this.shape.aabb.x) / 2,
+								 height: (this.shape.aabb.yf - this.shape.aabb.y) / 2};
+					break;
+				}
+		}
+		if (i == this.points.length && this.shape != null && debugDraw.Pointer.rX > this.shape.aabb.x && debugDraw.Pointer.rX < this.shape.aabb.xf &&
+				debugDraw.Pointer.rY > this.shape.aabb.y && debugDraw.Pointer.rY < this.shape.aabb.yf){
+			this.selected = -1;
+		}
+	},
+	onmove: function(){
+		for (var i = 0; i < this.points.length; i++){
+				var dx = Math.pow(this.points[i].x - debugDraw.Pointer.rX, 2),
+					dy = Math.pow(this.points[i].y - debugDraw.Pointer.rY, 2);
+				if (Math.sqrt(dx + dy) <= .1) {
+					debugDraw.Pointer.rX = this.points[i].x;
+					debugDraw.Pointer.rY = this.points[i].y; 
+					switch (i) {
+					    case 0:
+					        debugDraw.canvas.style.cursor = 'nw-resize';
+					        break;
+					    case 1:
+					        debugDraw.canvas.style.cursor = 'sw-resize';
+					        break;
+					    case 2:
+					        debugDraw.canvas.style.cursor = 'nw-resize';
+					        break;
+					    case 3:
+					        debugDraw.canvas.style.cursor = 'sw-resize';
+					        break;
+					    case 4:
+					        debugDraw.canvas.style.cursor = 'n-resize';
+					        break;
+					    case 5:
+					        debugDraw.canvas.style.cursor = 's-resize';
+					        break;
+					    case 6:
+					        debugDraw.canvas.style.cursor = 'e-resize';
+					        break;
+					    case 7:
+					        debugDraw.canvas.style.cursor = 'w-resize';
+					        break;
+					}
+					break;
+				}
+			}
+		if (i == this.points.length){
+			if (this.shape != null && debugDraw.Pointer.rX > this.shape.aabb.x && debugDraw.Pointer.rX < this.shape.aabb.xf &&
+					debugDraw.Pointer.rY > this.shape.aabb.y && debugDraw.Pointer.rY < this.shape.aabb.yf)
+				debugDraw.canvas.style.cursor = 'move';
+			else
+				debugDraw.canvas.style.cursor = 'default';
+		}
+		if (this.selected != null){
+			if (this.selected == -1){
+				if (debugDraw.Pointer.DragX - debugDraw.Pointer.rX != 0 || debugDraw.Pointer.DragY - debugDraw.Pointer.rY != 0){
+					for (var i = 0; i < this.shape.points.length; i++){
+						this.shape.points[i].x -= debugDraw.Pointer.DragX - debugDraw.Pointer.rX;
+						this.shape.points[i].y -= debugDraw.Pointer.DragY - debugDraw.Pointer.rY;
+					}for (var i = 0; i < this.shape.cpoints.length; i++){
+						this.shape.cpoints[i].x -= debugDraw.Pointer.DragX - debugDraw.Pointer.rX;
+						this.shape.cpoints[i].y -= debugDraw.Pointer.DragY - debugDraw.Pointer.rY;
+					}
+					this.shape.update();
+					this.update();
+					debugDraw.Pointer.DragX = debugDraw.Pointer.rX;
+					debugDraw.Pointer.DragY = debugDraw.Pointer.rY;
+				}
+			} 
+			//width resize
+			else if (this.selected == 6 || this.selected == 7){
+				var dist  = (debugDraw.Pointer.DragX > this.midpoint.x) ? 
+										-(this.midpoint.x - debugDraw.Pointer.rX)
+										: (this.midpoint.x - debugDraw.Pointer.rX);
+				this.shape.scale.x = Math.round(100 * dist / (this.oldsize.width))/100;
+				this.shape.update();
+				this.update();			}
+			//height resize
+			else if (this.selected == 4 || this.selected == 5){
+				var dist  = (debugDraw.Pointer.DragY > this.midpoint.y) ? 
+										-(this.midpoint.y - debugDraw.Pointer.rY)
+										: (this.midpoint.y - debugDraw.Pointer.rY);
+				this.shape.scale.y = Math.round(100 * dist / this.oldsize.height)/100;
+				this.shape.update();
+				this.update();
+			}
+			else {
+				var dx  = (debugDraw.Pointer.DragX > this.midpoint.x) ? 
+										-(this.midpoint.x - debugDraw.Pointer.rX)
+										: (this.midpoint.x - debugDraw.Pointer.rX);
+				var dy  = (debugDraw.Pointer.DragY > this.midpoint.y) ? 
+										-(this.midpoint.y - debugDraw.Pointer.rY)
+										: (this.midpoint.y - debugDraw.Pointer.rY);
+				this.shape.scale.x = Math.round(100 * dx / this.oldsize.width)/100;
+				this.shape.scale.y = Math.round(100 * dy / this.oldsize.height)/100;
+				this.shape.update();
+				this.update();		
+
+			}
+
+		}
+	},
+	onup: function(){
+		this.shape.updatescale();
+		this.selected = null;
+	},
+	onkeydown: function(key){
+	},
+	onkeyup: function(key){
+	},
+	update: function(){
+		this.size = { width: this.shape.aabb.xf - this.shape.aabb.x, 
+				      height: this.shape.aabb.yf - this.shape.aabb.y};
+		this.points[0] = { x: this.shape.aabb.x ,
+						   y: this.shape.aabb.y};
+		this.points[1] = { x: this.shape.aabb.x,
+						   y: this.shape.aabb.yf};
+		this.points[2] = { x: this.shape.aabb.xf,
+						   y: this.shape.aabb.yf};
+		this.points[3] = { x: this.shape.aabb.xf,
+						   y: this.shape.aabb.y};
+		this.points[4] = { x: (this.shape.aabb.x + this.shape.aabb.xf)/2,
+						   y: this.shape.aabb.y};
+		this.points[5] = { x: (this.shape.aabb.x + this.shape.aabb.xf)/2,
+						   y: this.shape.aabb.yf};
+		this.points[6] = { x: this.shape.aabb.x,
+						   y: (this.shape.aabb.y + this.shape.aabb.yf)/2};
+		this.points[7] = { x: this.shape.aabb.xf,
+						   y: (this.shape.aabb.y + this.shape.aabb.yf)/2};
+	},
+	draw: function(repos){
+		if (this.shape !== debugDraw.objects.selected() && debugDraw.objects.selected().type == 'shape'){
+			this.shape = debugDraw.objects.selected();
+			this.update();
+		}
+		if (this.shape != null && this.shape.type == 'shape'){
+			debugDraw.ctx.beginPath();
+			debugDraw.ctx.rect(this.shape.aabb.x * repos, this.shape.aabb.y * repos,
+							(this.shape.aabb.xf - this.shape.aabb.x) * repos, 
+							(this.shape.aabb.yf - this.shape.aabb.y) * repos);
+			debugDraw.ctx.stroke();
+			debugDraw.ctx.beginPath();
+			for (var i = 0; i < this.points.length; i++){
+				debugDraw.ctx.moveTo(this.points[i].x * repos + 5, this.points[i].y * repos);
+				debugDraw.ctx.arc(this.points[i].x * repos, this.points[i].y * repos,  5, 0, 2*Math.PI);
+			}
+			debugDraw.ctx.stroke();
+
+		}
+	}
+}
+
+debugDraw.Tools.pen = {
 	cursor: 'none',
 	selectedpoints: [],
+	shape: null,
 	set : function(){
 	},
 	onclick: function(){
@@ -81,34 +260,41 @@ debugDraw.Tools.line = {
 
 		}else if (debugDraw.objects.selected().type == 'shape'){
 			var points = debugDraw.objects.selected().points,
+				cpoints = debugDraw.objects.selected().cpoints,
 				 newpoint = {x: debugDraw.Pointer.rX , y: debugDraw.Pointer.rY};
 			this.selectedpoints = [];
-			for (var i = 0; i < points.length; i++)
-				if (points[i].x == newpoint.x && points[i].y == newpoint.y){
-					this.selectedpoints.push(points[i]);
-					cpoints = debugDraw.objects.selected().cpoints;
-					for (var k = 0; k < cpoints.length; k++){
-						if (points[i]===cpoints[k].point){
-							this.selectedpoints.push(cpoints[k]);
+		
+			if ((debugDraw.keyboard.keys[debugDraw.keyboard.key.CTRL])){
+				for (var i = 0; i < points.length; i++)
+					if (points[i].x == newpoint.x && points[i].y == newpoint.y){
+						this.selectedpoints.push(points[i]);
+						cpoints = debugDraw.objects.selected().cpoints;
+						for (var k = 0; k < cpoints.length; k++){
+							if (points[i] === cpoints[k].point){
+								this.selectedpoints.push(cpoints[k]);
+								this.selectedpoints[this.selectedpoints.length - 1].old = {
+									x: cpoints[k].x,
+									y: cpoints[k].y
+								}
+							}
 						}
+						break;
 					}
-					break;
-				}
-			/*
-			points = debugDraw.objects.selected().cpoints;
-			for (var i = 0; i < points.length; i++)
-				if (points[i].x == newpoint.x && points[i].y == newpoint.y){
-					this.selectedpoints.push(points[i]);
-					if (points[i+1] != undefined)
-						if (points[i].x == points[i+1].x && points[i].y == points[i+1].y)
-							this.selectedpoints.push(points[i+1]);
-					break;
-				}
-				*/
-			if (i == points.length){
+			} else {
+				for (var i = 0; i < cpoints.length; i++)
+					if (cpoints[i].x == newpoint.x && cpoints[i].y == newpoint.y){
+						this.selectedpoints.push(cpoints[i]);
+						if (cpoints[i+1] != undefined)
+							if (cpoints[i].x == cpoints[i+1].x && cpoints[i].y == cpoints[i+1].y)
+								this.selectedpoints.push(cpoints[i+1]);
+						break;
+					}
+			}
+			
+			if (i == cpoints.length){
 				debugDraw.objects.selected().add_point(newpoint);
-				this.selectedpoints.push(points[points.length-1]);
-				this.selectedpoints.push(points[points.length-2]);
+				this.selectedpoints.push(cpoints[cpoints.length-1]);
+				this.selectedpoints.push(cpoints[cpoints.length-2]);
 			}
 		}
 	},
@@ -141,24 +327,29 @@ debugDraw.Tools.line = {
 		}
 
 		if (this.selectedpoints.length > 0){
-			this.selectedpoints[0].x = debugDraw.Pointer.rX; 
-			this.selectedpoints[0].y = debugDraw.Pointer.rY;
-			if (this.selectedpoints.length > 1){
+			if (this.selectedpoints.length == 2 && this.selectedpoints[0].point != undefined){
+				this.selectedpoints[0].x = debugDraw.Pointer.rX; 
+				this.selectedpoints[0].y = debugDraw.Pointer.rY;
 				var dx = this.selectedpoints[0].x - this.selectedpoints[0].point.x, 
 					dy = this.selectedpoints[0].y - this.selectedpoints[0].point.y;
 				this.selectedpoints[1].x = this.selectedpoints[0].point.x - dx; 
 				this.selectedpoints[1].y = this.selectedpoints[0].point.y - dy;
+			} else {
+				this.selectedpoints[0].x = debugDraw.Pointer.rX; 
+				this.selectedpoints[0].y = debugDraw.Pointer.rY;
+				for (var i = 1; i < this.selectedpoints.length; i++){
+					this.selectedpoints[i].x = this.selectedpoints[i].old.x - (debugDraw.Pointer.DragX - debugDraw.Pointer.rX); 
+					this.selectedpoints[i].y = this.selectedpoints[i].old.y - (debugDraw.Pointer.DragY - debugDraw.Pointer.rY);
+				}
 			}
 			debugDraw.objects.selected().update();
 		}
 	},
 	onup: function(){
-		if (this.selectedpoints.length != 0){	
-			this.selectedpoints = [];
-		}
+		this.selectedpoints = [];
 	},
-	onkeydown: function(key){
-		if ((debugDraw.keyboard.key.BACKSPACE == key)){
+	onkeydown: function(e){
+		if (e.target === document.body && debugDraw.keyboard.key.BACKSPACE == e.which){
 			var point = debugDraw.objects.selected().points[debugDraw.objects.selected().points.length-1];
 			for (var i = 0; i < debugDraw.objects.selected().cpoints.length; i++)
 				if (debugDraw.objects.selected().cpoints[i].point === point){
@@ -170,5 +361,39 @@ debugDraw.Tools.line = {
 		}
 	},
 	onkeyup: function(key){
+	},
+	draw: function(repos){
+		this.shape = (this.shape !== debugDraw.objects.selected()) ? debugDraw.objects.selected() : this.shape;
+		if (this.shape != null && this.shape.type == 'shape'){
+			debugDraw.ctx.lineWidth = 2;
+			debugDraw.ctx.strokeStyle = 'rgba(0, 0, 0, .7)';
+			debugDraw.ctx.fillStyle = 'rgba(0, 0, 0, .9)';
+			//anchor points
+			for (var k = 0; k < this.shape.points.length; k++){
+				debugDraw.ctx.beginPath();
+				debugDraw.ctx.arc(this.shape.points[k].x * repos,
+						 		  this.shape.points[k].y * repos, 5, 0, 2*Math.PI);
+				debugDraw.ctx.fill();
+			}
+			//bezier curves
+			for (var k = 0; k < this.shape.cpoints.length; k++){
+				debugDraw.ctx.beginPath();
+				debugDraw.ctx.moveTo(this.shape.cpoints[k].point.x * repos,
+									this.shape.cpoints[k].point.y * repos);
+				debugDraw.ctx.lineTo(this.shape.cpoints[k].x * repos,
+						 		  	this.shape.cpoints[k].y * repos);
+				debugDraw.ctx.stroke();
+			}
+			//bezier points
+			debugDraw.ctx.strokeStyle = 'rgba(255, 198, 0, .7)';
+			for (var k = 0; k < this.shape.cpoints.length; k++){
+				debugDraw.ctx.beginPath();
+				if ((this.shape.cpoints[k].x != this.shape.cpoints[k].point.x) ||
+					(this.shape.cpoints[k].y != this.shape.cpoints[k].point.y))
+					debugDraw.ctx.arc(this.shape.cpoints[k].x * repos,
+						 		  this.shape.cpoints[k].y * repos, 5, 0, 2*Math.PI);
+				debugDraw.ctx.fill();
+			}		
+		}
 	}
 };

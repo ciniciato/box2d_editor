@@ -1,19 +1,10 @@
-function bezierInterpolation(t, a, b, c, d) {
-    var t2 = t * t,
-        t3 = t2 * t;
-    return a + (-a * 3 + t * (3 * a - a * t)) * t
-    + (3 * b + t * (-6 * b + b * 3 * t)) * t
-    + (c * 3 - c * 3 * t) * t2
-    + d * t3;
-}
-
 var debugDraw = new b2DebugDraw();
 
 debugDraw.drawing_object = null;
 debugDraw.properties = [];
-debugDraw.properties['orto'] = true;
-debugDraw.properties['grid'] = true;
-debugDraw.properties['cellsize'] = .25;
+debugDraw.properties.orto = true;
+debugDraw.properties.grid = true;
+debugDraw.properties.cellsize = .25;
 
 debugDraw.set = function (){
 	this.canvas = document.getElementById('canvas_debug');
@@ -36,9 +27,9 @@ debugDraw.set = function (){
 
 
 debugDraw.resize = function(){
-	this.canvas.width = window.innerWidth - $('#canvas_debug').offset().left;
+	this.canvas.width  = window.innerWidth  - $('#canvas_debug').offset().left;
 	this.canvas.height = window.innerHeight - $('#canvas_debug').offset().top;
-	this.m_drawScale = World.scale * this.Camera.scale;
+	this.m_drawScale   = World.scale * this.Camera.scale;
 	this.Camera.set();
 	debugDraw.ctx.translate( (this.Camera.position_dif.x - this.Camera.position.x) * (World.scale * this.scale), 
 						     (this.Camera.position_dif.y - this.Camera.position.y) * (World.scale * this.scale));
@@ -78,14 +69,16 @@ debugDraw.grid = function(){
 }
 
 debugDraw.draw = function (){
+	var repos = (World.scale * this.Camera.scale);
 	this.ctx.clearRect( (this.Camera.position.x - this.Camera.size.width) * (World.scale * this.Camera.scale), 
 						(this.Camera.position.y - this.Camera.size.height) * (World.scale * this.Camera.scale), 
 						(this.Camera.position.x - this.Camera.size.width) * (World.scale * this.Camera.scale) + this.canvas.width, 
 						(this.Camera.position.y - this.Camera.size.height) * (World.scale * this.Camera.scale) + this.canvas.height);
 	this.Camera.update();
 	World.DrawDebugData();
-	this.grid();
+	//this.grid();
 	this.objects.draw();
+	this.Tools.draw(repos);
 	this.Pointer.draw();
 }
 
@@ -151,29 +144,17 @@ debugDraw.keyboard = {
 	keys : [],
 	keydown : function(e){
 		debugDraw.keyboard.keys[e.which] = 1;
-		debugDraw.Tools.onkeydown(e.which);
-		if (e.which == debugDraw.keyboard.key.DELETE){
-			//debugDraw.objects.delete(debugDraw.objects.selected().ind);
-		}
-		if (e.which == debugDraw.keyboard.key.F8){
-			debugDraw.properties.orto = !debugDraw.properties.orto;
-			if (!debugDraw.properties.orto)
-				Controls.log('ORTO DESACTIVATED');
-			else
-				Controls.log('ORTO ACTIVATED');
-		}
-		if (1==2) {
-			e.defaultPrevented(); 
-		}
+		debugDraw.Tools.onkeydown(e);
+		if (e.target === document.body)
+			e.preventDefault();
 	},
 	keypress : function(e){
 		debugDraw.keyboard.keys[e.which] = 1;
-		if (1==2) {
-			e.defaultPrevented(); 
-		}
+		if (e.target === document.body)
+			e.preventDefault();
 	},
 	keyup : function(e) {
-		debugDraw.Tools.onkeyup(e.which);
+		debugDraw.Tools.onkeyup(e);
 		delete debugDraw.keyboard.keys[e.which];
 	},
 	set: function(){
@@ -192,13 +173,12 @@ debugDraw.Pointer = {
 	DragX      : 0,
 	DragY      : 0,
 	wheelDelta : 0,
-	hasMoved   : false,
 	isDown     : false,
 	draw : function(){
 		debugDraw.ctx.beginPath();
 		debugDraw.ctx.arc(this.rX * (World.scale * debugDraw.Camera.scale), 
-					 this.rY * (World.scale * debugDraw.Camera.scale), 
-					 5, 0, 2*Math.PI);
+					 		this.rY * (World.scale * debugDraw.Camera.scale), 
+					 		5, 0, 2*Math.PI);
 		debugDraw.ctx.stroke();
 	},
 	pointerDown : function (e) {
@@ -218,9 +198,7 @@ debugDraw.Pointer = {
 		if (e != undefined){
 			this.X  = e.pageX - $('#canvas_debug').offset().left;
 			this.Y  = e.pageY - $('#canvas_debug').offset().top;
-			this.hasMoved = true;
 		}
-
 		this.rX = debugDraw.Camera.position.x - debugDraw.Camera.size.width  + this.X / (World.scale * debugDraw.Camera.scale),
 		this.rY = debugDraw.Camera.position.y - debugDraw.Camera.size.height + this.Y / (World.scale * debugDraw.Camera.scale);
     	
@@ -264,12 +242,9 @@ debugDraw.Pointer = {
 		}, false);
 		if (window.addEventListener) this.elem.addEventListener('DOMMouseScroll', function(e) { 
 			self.wheelDelta = e.detail * 10;
-	        var value =  debugDraw.Camera.scale- e.detail/30;
-	        if ((value>=.1)&&(value<=2)){
-			//	debugDraw.Camera.free_position.x = debugDraw.Pointer.rX;
-			//	debugDraw.Camera.free_position.y = debugDraw.Pointer.rY;
+	        var value =  debugDraw.Camera.scale - e.detail/30;
+	        if (value >= .1)
 		        debugDraw.Camera.zoom(value);
-	    	}
 			return false; 
 		}, false); 
 		this.elem.onmousewheel = function () { 

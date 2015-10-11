@@ -10,7 +10,6 @@
 
         <script src="lib/jquery/jquery.js"></script>
         <script src="lib/jquery/jquery-ui.min.js"></script>
-        <script src="lib/jquery/colResizable.min.js"></script>
         <link rel="stylesheet" href="lib/jquery/jquery-ui.structure.min.css">
         <link rel="stylesheet" href="lib/jquery/jquery-ui.theme.min.css">
         <link rel="stylesheet" href="lib/jquery/jquery-ui.min.css">
@@ -40,10 +39,7 @@
                 
                 requestAnimationFrame(loop);
                 World.update();
-                //if (debugDraw.Pointer.hasMoved)
-                {
-                    debugDraw.draw();
-                }
+                debugDraw.draw();
             }
         </script>
     </body>
