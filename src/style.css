@@ -56,10 +56,9 @@ canvas{
 #td_panel{
 	background: red;
 	height: 100%;
-	width: 20%;
+	width: 250px;
 }
 #td_canvas{
-	width: 80%;
 	height: 100%;
 }
 

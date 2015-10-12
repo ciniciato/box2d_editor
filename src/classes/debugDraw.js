@@ -40,41 +40,64 @@ window.onresize = function(event) {
 };
 
 debugDraw.grid = function(){
-	this.ctx.strokeStyle = 'rgba(0, 0, 0, 1)';
+	var linecount = 0;
+	this.ctx.strokeStyle = 'rgba(0, 0, 0, .4)';
 	this.ctx.lineWidth = 1;
 	this.ctx.beginPath();
 	if (this.properties.grid){
-		for (var i = (this.Camera.position.x - this.Camera.size.width)-
-					(this.Camera.position.x - this.Camera.size.width)%(debugDraw.properties.cellsize / this.Camera.scale); 
+		for (var i = (this.Camera.position.x - this.Camera.size.width) -
+					 (this.Camera.position.x - this.Camera.size.width) % 
+					 (debugDraw.properties.cellsize / this.Camera.scale); 
 				i < this.Camera.position.x - this.Camera.size.width + this.Camera.size.width * 2; 
-				i+=debugDraw.properties.cellsize / this.Camera.scale){
+				i += debugDraw.properties.cellsize / this.Camera.scale){
+			if (i % 1 == 0){
+				this.ctx.stroke();
+				this.ctx.lineWidth = 3;
+				this.ctx.beginPath();
+			}           
 			this.ctx.moveTo(i * (World.scale * this.Camera.scale), 
 							(this.Camera.position.y - this.Camera.size.height) * (World.scale * this.Camera.scale));
 			this.ctx.lineTo(i * (World.scale * this.Camera.scale), 
 							(this.Camera.position.y + this.Camera.size.height * 2) * (World.scale * this.Camera.scale));
+			
+			if (i % 1 == 0){
+				this.ctx.stroke();
+				this.ctx.lineWidth = 1;
+				this.ctx.beginPath(); 
+			}
 		}
-		for (var i = (this.Camera.position.y - this.Camera.size.height)-
-					(this.Camera.position.y - this.Camera.size.height)%(debugDraw.properties.cellsize / this.Camera.scale); 
+		for (var i = (this.Camera.position.y - this.Camera.size.height) -
+					(this.Camera.position.y - this.Camera.size.height) % 
+					(debugDraw.properties.cellsize / this.Camera.scale); 
 				i < this.Camera.position.y - this.Camera.size.height + this.Camera.size.height * 2; 
-				i+=debugDraw.properties.cellsize / this.Camera.scale){
+				i += debugDraw.properties.cellsize / this.Camera.scale){
+			if (i % 1 == 0){
+				this.ctx.stroke();
+				this.ctx.lineWidth = 3;
+				this.ctx.beginPath();
+			}        
 			this.ctx.moveTo((this.Camera.position.x - this.Camera.size.width) * (World.scale * this.Camera.scale),
 					i * (World.scale * this.Camera.scale));
 			this.ctx.lineTo((this.Camera.position.x + this.Camera.size.width * 2) * (World.scale * this.Camera.scale),
 					i * (World.scale * this.Camera.scale));
+			if (i % 1 == 0){
+				this.ctx.stroke();
+				this.ctx.lineWidth = 1;
+				this.ctx.beginPath();
+			}        
 		}
 	}
-
 	this.ctx.stroke();
-	this.ctx.strokeStyle='red';
 }
 
 debugDraw.draw = function (){
 	var repos = (World.scale * this.Camera.scale);
-	this.ctx.clearRect( (this.Camera.position.x - this.Camera.size.width) * (World.scale * this.Camera.scale), 
-						(this.Camera.position.y - this.Camera.size.height) * (World.scale * this.Camera.scale), 
-						(this.Camera.position.x - this.Camera.size.width) * (World.scale * this.Camera.scale) + this.canvas.width, 
-						(this.Camera.position.y - this.Camera.size.height) * (World.scale * this.Camera.scale) + this.canvas.height);
 	this.Camera.update();
+	this.ctx.clearRect( (this.Camera.position.x - this.Camera.size.width)  * repos, 
+						(this.Camera.position.y - this.Camera.size.height) * repos, 
+						(this.Camera.position.x - this.Camera.size.width)  * repos + this.canvas.width, 
+						(this.Camera.position.y - this.Camera.size.height) * repos + this.canvas.height);
+	
 	World.DrawDebugData();
 	//this.grid();
 	this.objects.draw();
@@ -83,13 +106,10 @@ debugDraw.draw = function (){
 }
 
 debugDraw.Camera = {
-	free_position : {x: 15, y: 13},
-	position      : {x: 0, y:0},
-	position_dif  : {x: 0, y:0},
+	position      : {x: 15, y: 13},
+	position_dif  : {x: 0,  y: 0},
 	size          : {width:  0,
 					 height: 0},
-	followed      : null,
-	initialized   : false,
 	scale: 1
 } 	
 
@@ -107,17 +127,9 @@ debugDraw.Camera.zoom = function(_value){
 	debugDraw.resize();
 }
 
-debugDraw.Camera.update = function (){
-	var deltaCentre = {
-		x: debugDraw.Pointer.rX - this.position.x,
-		y: debugDraw.Pointer.rY - this.position.y
-	};
-	
-	this.free_position.x = (this.free_position.x - this.size.width < 0) ? this.size.width : this.free_position.x;
-	this.free_position.y = (this.free_position.y - this.size.height < 0) ? this.size.height : this.free_position.y;
-
-	this.position.x = this.free_position.x;
-	this.position.y = this.free_position.y;
+debugDraw.Camera.update = function (){	
+	this.position.x = (this.position.x - this.size.width <= 0) ? this.size.width : this.position.x;
+	this.position.y = (this.position.y - this.size.height <= 0) ? this.size.height : this.position.y;
 	debugDraw.ctx.translate((this.position_dif.x - this.position.x) * (World.scale * this.scale), 
 						    (this.position_dif.y - this.position.y) * (World.scale * this.scale)); 
 	this.position_dif.x = this.position.x;
@@ -158,7 +170,7 @@ debugDraw.keyboard = {
 			 (e.which == debugDraw.keyboard.key.UP) ||
 			 (e.which == debugDraw.keyboard.key.RIGHT) ||
 			 (e.which == debugDraw.keyboard.key.DOWNS))
-			e.preventDefault();
+			e.preventDefault();	
 	},
 	keypress : function(e){
 		debugDraw.keyboard.keys[e.which] = 1;
@@ -187,6 +199,8 @@ debugDraw.Pointer = {
 	wheelDelta : 0,
 	isDown     : false,
 	draw : function(){
+		debugDraw.ctx.strokeStyle = 'rgba(250, 0, 0, .9)';
+		debugDraw.ctx.lineWidth = 3;
 		debugDraw.ctx.beginPath();
 		debugDraw.ctx.arc(this.rX * (World.scale * debugDraw.Camera.scale), 
 					 		this.rY * (World.scale * debugDraw.Camera.scale), 
@@ -197,8 +211,8 @@ debugDraw.Pointer = {
 		if (!this.isDown) {
 			this.isDown = true;
 			this.evt = e;
-			this.X  = e.clientX - $('#canvas_debug').offset().left;
-			this.Y  = e.clientY - $('#canvas_debug').offset().top;
+			this.X  = e.pageX - (window.innerWidth - debugDraw.canvas.width);
+			this.Y  = e.pageY - (window.innerHeight - debugDraw.canvas.height);
 			this.DragX = this.rX;
 			this.DragY = this.rY;
 
@@ -208,8 +222,8 @@ debugDraw.Pointer = {
 	},
 	pointerMove : function(e) {
 		if (e != undefined){
-			this.X  = e.pageX - $('#canvas_debug').offset().left;
-			this.Y  = e.pageY - $('#canvas_debug').offset().top;
+			this.X  = e.pageX - (window.innerWidth - debugDraw.canvas.width);
+			this.Y  = e.pageY - (window.innerHeight - debugDraw.canvas.height);
 		}
 		this.rX = debugDraw.Camera.position.x - debugDraw.Camera.size.width  + this.X / (World.scale * debugDraw.Camera.scale),
 		this.rY = debugDraw.Camera.position.y - debugDraw.Camera.size.height + this.Y / (World.scale * debugDraw.Camera.scale);
@@ -261,7 +275,9 @@ debugDraw.Pointer = {
 		}, false); 
 		this.elem.onmousewheel = function () { 
 			self.wheelDelta = -event.wheelDelta * .25;
-			self.setup.wheel && self.setup.wheel(event);
+	        var value =  debugDraw.Camera.scale - self.wheelDelta/30;
+	        if (value >= .1)
+		        debugDraw.Camera.zoom(value);
 			return false; 
 		}
 	}

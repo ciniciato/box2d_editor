@@ -7,7 +7,7 @@ var Objects = {
 		this.elem = null;
 		this.children = [];
 
-		this.aabb = {x: 0, y: 0, xf: 0, yf: 0};
+		this.aabb = {x: null, y: null, xf: null, yf: null};
 		this.angle  = 0;
 		this.origin = {x: 0, y: 0};
 		this.scale = {x: 1, y: 1};
@@ -34,7 +34,55 @@ var Objects = {
 					return this.properties[i];
 					break;
 				}
-		}
+		};
+
+		this.updatescale = function(){
+			this.scale = {x: 1, y: 1};
+			for (var i = 0; i < this.children.length; i++){
+				var ind = this.children[i];
+		    	debugDraw.objects.list[ind].updatescale();
+		    }
+		};
+
+		this.update = function(){
+			this.aabb = {x: null, y: null, xf: null, yf: null};
+			for (var i = 0; i < this.children.length; i++){
+				var ind = this.children[i];
+		    	this.aabb.x  = (this.aabb.x < debugDraw.objects.list[ind].aabb.x && this.aabb.x != null) ? 
+		    					this.aabb.x : debugDraw.objects.list[ind].aabb.x;
+				this.aabb.xf = (this.aabb.xf > debugDraw.objects.list[ind].aabb.xf && this.aabb.xf != null) ? 
+								this.aabb.xf : debugDraw.objects.list[ind].aabb.xf;
+				this.aabb.y  = (this.aabb.y < debugDraw.objects.list[ind].aabb.y && this.aabb.y != null) ? 
+								this.aabb.y : debugDraw.objects.list[ind].aabb.y;
+				this.aabb.yf = (this.aabb.yf > debugDraw.objects.list[ind].aabb.yf && this.aabb.yf != null) ? 
+								this.aabb.yf : debugDraw.objects.list[ind].aabb.yf;
+			}
+			this.origin = {x: (this.aabb.x + this.aabb.xf) / 2,
+						   y: (this.aabb.y + this.aabb.yf) / 2};
+			//define points based on scale and redifine aabb	
+					
+			if (this.scale.x != 1 || this.scale.y != 1){
+				this.aabb = {x: null, y: null, xf: null, yf: null};
+				for (var i = 0; i < this.children.length; i++){
+					var ind = this.children[i];
+			    	debugDraw.objects.list[ind].scale = {x: this.scale.x, y: this.scale.y};
+			    	debugDraw.objects.list[ind].update('a');
+			    	this.aabb.x  = (this.aabb.x < debugDraw.objects.list[ind].aabb.x && this.aabb.x != null) ? 
+			    					this.aabb.x : debugDraw.objects.list[ind].aabb.x;
+					this.aabb.xf = (this.aabb.xf > debugDraw.objects.list[ind].aabb.xf && this.aabb.xf != null) ? 
+									this.aabb.xf : debugDraw.objects.list[ind].aabb.xf;
+					this.aabb.y  = (this.aabb.y < debugDraw.objects.list[ind].aabb.y && this.aabb.y != null) ? 
+									this.aabb.y : debugDraw.objects.list[ind].aabb.y;
+					this.aabb.yf = (this.aabb.yf > debugDraw.objects.list[ind].aabb.yf && this.aabb.yf != null) ? 
+									this.aabb.yf : debugDraw.objects.list[ind].aabb.yf;
+			    }
+				this.origin = {x: (this.aabb.x + this.aabb.xf) / 2,
+								y: (this.aabb.y + this.aabb.yf) / 2};
+			}					
+		};
+
+		this.draw = function(repos){
+		};
 	},
 	shape: function(_id, _args){
 		this.ind  = _id;
@@ -49,7 +97,7 @@ var Objects = {
 		this.isClosed = false;//true if is a closed polygon, last point == first point
 
 		this.angle  = 0;
-		this.aabb = {x: 0, y: 0, xf: 0, yf: 0};
+		this.aabb = {x: null, y: null, xf: null, yf: null};
 		this.scale = {x: 1, y: 1};
 
 		this.points = [];
@@ -105,7 +153,7 @@ var Objects = {
 				}
 		}
 
-		this.update = function(){
+		this.update = function(r){
 			var that = this;
 			function setaabb(ind){
 		    	that.aabb.x  = (that.aabb.x < that.rpoints[ind].x && that.aabb.x != null) ? 
@@ -176,34 +224,33 @@ var Objects = {
 
 			//define points based on scale and redifine aabb			
 			if (this.scale.x != 1 || this.scale.y != 1){
-				var midpoint = {x: (this.aabb.xf + this.aabb.x) / 2,
-								y: (this.aabb.yf + this.aabb.y) / 2};
-
 				this.aabb.y  = null;
 				this.aabb.yf = null;
 				this.aabb.x  = null;
 				this.aabb.xf = null;
 
 				for (var i = 0; i < this.rpoints.length; i++){
-					this.rpoints[i].x = midpoint.x + (this.rpoints[i].x - midpoint.x) * this.scale.x;
-					this.rpoints[i].y = midpoint.y + (this.rpoints[i].y - midpoint.y) * this.scale.y;
+					this.rpoints[i].x = this.origin.x + (this.rpoints[i].x - this.origin.x) * this.scale.x;
+					this.rpoints[i].y = this.origin.y + (this.rpoints[i].y - this.origin.y) * this.scale.y;
 					this.aabb.x  = (this.aabb.x < this.rpoints[i].x && this.aabb.x != null) ? this.aabb.x : this.rpoints[i].x;
 					this.aabb.xf = (this.aabb.xf > this.rpoints[i].x && this.aabb.xf != null) ? this.aabb.xf : this.rpoints[i].x;
 					this.aabb.y  = (this.aabb.y < this.rpoints[i].y && this.aabb.y != null) ? this.aabb.y : this.rpoints[i].y;
 					this.aabb.yf = (this.aabb.yf > this.rpoints[i].y && this.aabb.yf != null) ? this.aabb.yf : this.rpoints[i].y;
 				}
-			}							 
+				this.origin = {x: (this.aabb.x + this.aabb.xf) / 2,
+								y: (this.aabb.y + this.aabb.yf) / 2};
+			}			
+			if (r == undefined)	
+			this.parent.update();			 
 		}
 
 		this.updatescale = function(){
-			var midpoint = {x: (this.aabb.xf + this.aabb.x) / 2,
-							y: (this.aabb.yf + this.aabb.y) / 2};
 			for (var i = 0; i < this.cpoints.length; i++){
-				this.cpoints[i].x = midpoint.x + (this.cpoints[i].x - midpoint.x) * this.scale.x;
-				this.cpoints[i].y = midpoint.y + (this.cpoints[i].y - midpoint.y) * this.scale.y;
+				this.cpoints[i].x = this.origin.x + (this.cpoints[i].x - this.origin.x) * this.scale.x;
+				this.cpoints[i].y = this.origin.y + (this.cpoints[i].y - this.origin.y) * this.scale.y;
 				if (this.points[i] != undefined){
-					this.points[i].x = midpoint.x + (this.points[i].x - midpoint.x) * this.scale.x;
-					this.points[i].y = midpoint.y + (this.points[i].y - midpoint.y) * this.scale.y;
+					this.points[i].x = this.origin.x + (this.points[i].x - this.origin.x) * this.scale.x;
+					this.points[i].y = this.origin.y + (this.points[i].y - this.origin.y) * this.scale.y;
 				}
 			}
 			this.scale.x = 1;
@@ -213,10 +260,10 @@ var Objects = {
 		this.drawfixtures = function(repos){
 			debugDraw.ctx.lineWidth = 2;
 			debugDraw.ctx.strokeStyle = 'rgba(133, 86, 212, .7)';
-			debugDraw.ctx.fillStyle = 'rgba(133, 86, 212, .3)';
+			debugDraw.ctx.fillStyle   = 'rgba(133, 86, 212, .3)';
+			debugDraw.ctx.beginPath();
 			for (var k = 0; k < this.fpoints.length; k += 3)
 				if (this.fpoints[k+2]!=undefined){
-					debugDraw.ctx.beginPath();
 					debugDraw.ctx.moveTo(this.fpoints[k].x * repos,
 						 		     	 this.fpoints[k].y * repos);
 					debugDraw.ctx.lineTo(this.fpoints[k+1].x * repos,
@@ -225,8 +272,8 @@ var Objects = {
 						 		     	 this.fpoints[k+2].y * repos);
 					debugDraw.ctx.lineTo(this.fpoints[k].x * repos,
 						 		     	 this.fpoints[k].y * repos);
-					debugDraw.ctx.stroke();
 				}
+			debugDraw.ctx.stroke();
 		} 
 
 		this.drawcontour = function(repos, points){
@@ -250,13 +297,11 @@ var Objects = {
 	    	debugDraw.ctx.lineCap = "round";
 			debugDraw.ctx.lineJoin = "round";
 			debugDraw.ctx.lineWidth = 6;
-			this.drawcontour(repos, this.rpoints);
-			
+			this.drawcontour(repos, this.rpoints);			
 			if (debugDraw.objects.selected() === this){
-				//if (this.complex)
-					//this.drawfixtures(repos);
-			}
-			
+				if (this.complex)
+					this.drawfixtures(repos);
+			}			
 		}
 	},
 	joint: {
@@ -333,9 +378,7 @@ debugDraw.objects = {
 		var repos = (World.scale * debugDraw.Camera.scale);
 		for (var i = 0; i < this.list.length; i++){
 			if (this.list[i] != null)
-				if (this.list[i].type=='shape'){
-					this.list[i].draw(repos);
-				} 
+				this.list[i].draw(repos);
 		}
 	}
 }

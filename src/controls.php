@@ -321,8 +321,7 @@
     };
 
     Controls.log = function (msg){
-        var txt = $('#msg_log').html();
-        $('#msg_log').html(msg +'<br>' + txt);
+        document.getElementById('msg_log').innerHTML = msg +'<br>' + document.getElementById('msg_log').innerHTML;
     }
 
     Controls.panel = function(_id){
@@ -404,15 +403,22 @@
                 if (debugDraw.objects.list[k].type == 'body'){
                     var body = Box2d.create_body({  x: debugDraw.objects.list[k].aabb.x, 
                                                     y: debugDraw.objects.list[k].aabb.y },
-                                                 {type: debugDraw.objects.list[k].property('type').val});
+                                                 {           type: (debugDraw.objects.list[k].property('type').val=='static') ? b2Body.b2_staticBody : b2Body.b2_dynamicBody,
+                                                   angularDamping: parseFloat(debugDraw.objects.list[k].property('angularDamping').val),
+                                                    linearDamping: parseFloat(debugDraw.objects.list[k].property('linearDamping').val),
+                                                    fixedRotation: (debugDraw.objects.list[k].property('fixedRotation').val=='true') ? true : false });
+                    
                     for (var i = 0; i < debugDraw.objects.list[k].children.length; i++){
-                            var points = [], points_str = '', ind = debugDraw.objects.list[k].children[i];
+                            var ind = debugDraw.objects.list[k].children[i], points = [];
                             for (var c = 0; c < debugDraw.objects.list[ind].rpoints.length; c++){
                                 points.push({ x: debugDraw.objects.list[ind].rpoints[c].x - debugDraw.objects.list[k].aabb.x,
                                               y: debugDraw.objects.list[ind].rpoints[c].y - debugDraw.objects.list[k].aabb.y});
 
                             }
-                            Box2d.create_poly(points[0], points, {restitution: debugDraw.objects.list[ind].property('restitution').val}, body);
+                            Box2d.create_poly(points[0], points, 
+                                    {restitution: debugDraw.objects.list[ind].property('restitution').val,
+                                         density: debugDraw.objects.list[ind].property('density').val,
+                                        friction: debugDraw.objects.list[ind].property('friction').val}, body);
                     }
                 }
             }

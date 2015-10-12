@@ -131,10 +131,6 @@ Box2d.create_body = function(_position, _options){
 	body_def.linearDamping  = (_options.linearDamping===undefined) ? .0 : _options.linearDamping;
 	body_def.angularDamping = (_options.angularDamping===undefined) ? .0 : _options.angularDamping;
 	body_def.fixedRotation  = (_options.fixedRotation===undefined) ? false : _options.fixedRotation;
-  if (_options.type=='static')
-    _options.type = b2Body.b2_staticBody;
-  else if (_options.type=='dynamic')
-    _options.type = b2Body.b2_dynamicBody;
 	body_def.type           = (_options.type===undefined) ? b2Body.b2_dynamicBody : _options.type;
 	var b = World.CreateBody(body_def);
 	return b;

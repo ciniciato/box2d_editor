@@ -54,8 +54,8 @@ debugDraw.Tools.scroll = {
 		else if (debugDraw.Pointer.isDown){
 			var dx = debugDraw.Pointer.rX - debugDraw.Pointer.DragX; 
 			var dy = debugDraw.Pointer.rY - debugDraw.Pointer.DragY; 
-			debugDraw.Camera.free_position.x -= dx * Math.min(10, Math.pow(dx, 2) * 0.1);
-			debugDraw.Camera.free_position.y -= dy * Math.min(10, Math.pow(dy, 2) * 0.1);
+			debugDraw.Camera.position.x -= dx * Math.min(10, Math.pow(dx, 2) * 0.1);
+			debugDraw.Camera.position.y -= dy * Math.min(10, Math.pow(dy, 2) * 0.1);
 		}
 	},
 	onup: function(){
@@ -81,6 +81,9 @@ debugDraw.Tools.select_points = {
 		this.selectedpoints = [];
 	},
 	onclick: function(){
+		if (this.shape !== debugDraw.objects.selected()){
+			this.set();
+		}
 		if ((debugDraw.keyboard.keys[debugDraw.keyboard.key.CTRL])){
 			this.drag = false;
 			this.move = true;
@@ -98,22 +101,21 @@ debugDraw.Tools.select_points = {
 		if (this.drag){
 			this.aabb.xf = debugDraw.Pointer.rX;
 			this.aabb.yf = debugDraw.Pointer.rY;
+			var width = Math.abs(this.aabb.xf - this.aabb.x)/2,
+				height = Math.abs(this.aabb.yf - this.aabb.y)/2,
+				c = { x: (this.aabb.xf + this.aabb.x) / 2,
+					  y: (this.aabb.yf + this.aabb.y) / 2}
 			for (var i = 0; i < this.shape.points.length; i++){
-				if ((this.aabb.x > this.shape.points[i].x && this.aabb.xf < this.shape.points[i].x &&
-					this.aabb.y > this.shape.points[i].y && this.aabb.yf < this.shape.points[i].y) ||
-					(this.aabb.x < this.shape.points[i].x && this.aabb.xf > this.shape.points[i].x &&
-					this.aabb.y < this.shape.points[i].y && this.aabb.yf > this.shape.points[i].y) ||
-					(this.aabb.x > this.shape.points[i].x && this.aabb.xf < this.shape.points[i].x &&
-					this.aabb.y < this.shape.points[i].y && this.aabb.yf > this.shape.points[i].y) ||
-					(this.aabb.x < this.shape.points[i].x && this.aabb.xf > this.shape.points[i].x &&
-					this.aabb.y > this.shape.points[i].y && this.aabb.yf < this.shape.points[i].y)){
-					for (var k = 0; k < this.selectedpoints.length; k++){
-						if (this.selectedpoints[k] === this.shape.points[i])
-							break;
-					}
+				for (var k = 0; k < this.selectedpoints.length; k++){
+					if (this.selectedpoints[k] === this.shape.points[i])
+						break;
+				}
+				if (Math.abs(this.shape.points[i].x - c.x) <= width && 
+					Math.abs(this.shape.points[i].y - c.y) <= height){
 					if (k == this.selectedpoints.length)
 						this.selectedpoints.push(this.shape.points[i]);
-				}
+				} else if (k != this.selectedpoints.length)
+					this.selectedpoints.splice(k, 1);
 			}
 		} else {
 		if ((debugDraw.keyboard.keys[debugDraw.keyboard.key.CTRL] && this.move))
@@ -141,28 +143,48 @@ debugDraw.Tools.select_points = {
 		this.drag = false;
 		this.move = false;
 	},
-	onkeydown: function(key){
+	onkeydown: function(e){
+		console.log(e);
+		if (e.target === document.body && debugDraw.keyboard.key.DELETE == e.which){
+			for (var k = 0; k < this.selectedpoints.length; k++){
+				for (var i = 0; i < this.shape.cpoints.length; i++)
+					if (this.shape.cpoints[i].point === this.selectedpoints[k]){
+						this.shape.cpoints.splice(i, 1);
+						i--;
+					}
+				for (var j = 0; j < this.shape.points.length; j++)
+					if (this.shape.points[j] === this.selectedpoints[k]){
+						this.shape.points.splice(j, 1);
+						break;
+					}
+			}
+			this.shape.update();
+			this.selectedpoints = [];
+		}
 	}, 	
 	onkeyup: function(key){
 	},
 	draw: function(repos){
+		debugDraw.ctx.lineWidth   = 2;
+		debugDraw.ctx.strokeStyle = 'rgba(0, 0, 0, .7)';
+		debugDraw.ctx.fillStyle   = 'rgba(0, 0, 0, .9)';
 		if (this.drag){
 			debugDraw.ctx.beginPath();
-			debugDraw.ctx.rect(this.aabb.x * repos, this.aabb.y * repos,
-							(this.aabb.xf - this.aabb.x) * repos, 
-							(this.aabb.yf - this.aabb.y) * repos);
+			debugDraw.ctx.rect(this.aabb.x * repos, 
+				               this.aabb.y * repos,
+							  (this.aabb.xf - this.aabb.x) * repos, 
+							  (this.aabb.yf - this.aabb.y) * repos);
 			debugDraw.ctx.stroke();
 		}
-		debugDraw.ctx.lineWidth = 2;
-		debugDraw.ctx.strokeStyle = 'rgba(0, 0, 0, .7)';
-		debugDraw.ctx.fillStyle = 'rgba(0, 0, 0, .9)';
 		//anchor points
+		debugDraw.ctx.beginPath();
 		for (var k = 0; k < this.selectedpoints.length; k++){
-			debugDraw.ctx.beginPath();
+			debugDraw.ctx.moveTo(this.selectedpoints[k].x * repos + 5,
+					 		     this.selectedpoints[k].y * repos);
 			debugDraw.ctx.arc(this.selectedpoints[k].x * repos,
 					 		  this.selectedpoints[k].y * repos, 5, 0, 2*Math.PI);
-			debugDraw.ctx.stroke();
 		}
+		debugDraw.ctx.fill();
 	}
 }
 
@@ -201,16 +223,17 @@ debugDraw.Tools.remove_anchor_point = {
 	},
 	draw: function(repos){
 		if (this.shape != null){
-			debugDraw.ctx.lineWidth = 2;
-			debugDraw.ctx.strokeStyle = 'rgba(0, 0, 0, .7)';
-			debugDraw.ctx.fillStyle = 'rgba(0, 0, 0, .9)';
+			debugDraw.ctx.lineWidth   = 2;
+			debugDraw.ctx.fillStyle   = 'rgba(0, 0, 0, .9)';
 			//anchor points
+			debugDraw.ctx.beginPath();
 			for (var k = 0; k < this.shape.points.length; k++){
-				debugDraw.ctx.beginPath();
+				debugDraw.ctx.moveTo(this.shape.points[k].x * repos,
+						 		     this.shape.points[k].y * repos);
 				debugDraw.ctx.arc(this.shape.points[k].x * repos,
 						 		  this.shape.points[k].y * repos, 5, 0, 2*Math.PI);
-				debugDraw.ctx.stroke();
 			}
+			debugDraw.ctx.fill();
 		}
 	}
 }
@@ -234,9 +257,9 @@ debugDraw.Tools.transform = {
 				if (Math.sqrt(dx + dy) <= .1) {
 					this.selected = i;
 					this.midpoint   = {x: (this.shape.aabb.xf + this.shape.aabb.x) / 2,
-										y: (this.shape.aabb.yf + this.shape.aabb.y) / 2};
+									   y: (this.shape.aabb.yf + this.shape.aabb.y) / 2};
 					this.oldsize = {width: (this.shape.aabb.xf - this.shape.aabb.x) / 2,
-								 height: (this.shape.aabb.yf - this.shape.aabb.y) / 2};
+								   height: (this.shape.aabb.yf - this.shape.aabb.y) / 2};
 					break;
 				}
 		}
@@ -291,13 +314,29 @@ debugDraw.Tools.transform = {
 		if (this.selected != null){
 			if (this.selected == -1){
 				if (debugDraw.Pointer.DragX - debugDraw.Pointer.rX != 0 || debugDraw.Pointer.DragY - debugDraw.Pointer.rY != 0){
-					for (var i = 0; i < this.shape.points.length; i++){
-						this.shape.points[i].x -= debugDraw.Pointer.DragX - debugDraw.Pointer.rX;
-						this.shape.points[i].y -= debugDraw.Pointer.DragY - debugDraw.Pointer.rY;
-					}for (var i = 0; i < this.shape.cpoints.length; i++){
-						this.shape.cpoints[i].x -= debugDraw.Pointer.DragX - debugDraw.Pointer.rX;
-						this.shape.cpoints[i].y -= debugDraw.Pointer.DragY - debugDraw.Pointer.rY;
-					}
+					if (this.shape.points == undefined){
+						for (var k = 0; k < this.shape.children.length; k++){
+							var ind = this.shape.children[k], obj = debugDraw.objects.list[ind];
+							for (var i = 0; i < obj.points.length; i++){
+								obj.points[i].x -= debugDraw.Pointer.DragX - debugDraw.Pointer.rX;
+								obj.points[i].y -= debugDraw.Pointer.DragY - debugDraw.Pointer.rY;
+							}
+							for (var i = 0; i < obj.cpoints.length; i++){
+								obj.cpoints[i].x -= debugDraw.Pointer.DragX - debugDraw.Pointer.rX;
+								obj.cpoints[i].y -= debugDraw.Pointer.DragY - debugDraw.Pointer.rY;
+							}	
+							obj.update();						
+						}
+					} else {
+						for (var i = 0; i < this.shape.points.length; i++){
+							this.shape.points[i].x -= debugDraw.Pointer.DragX - debugDraw.Pointer.rX;
+							this.shape.points[i].y -= debugDraw.Pointer.DragY - debugDraw.Pointer.rY;
+						}
+						for (var i = 0; i < this.shape.cpoints.length; i++){
+							this.shape.cpoints[i].x -= debugDraw.Pointer.DragX - debugDraw.Pointer.rX;
+							this.shape.cpoints[i].y -= debugDraw.Pointer.DragY - debugDraw.Pointer.rY;
+						}
+					}	
 					this.shape.update();
 					this.update();
 					debugDraw.Pointer.DragX = debugDraw.Pointer.rX;
@@ -331,10 +370,8 @@ debugDraw.Tools.transform = {
 				this.shape.scale.x = Math.round(100 * dx / this.oldsize.width)/100;
 				this.shape.scale.y = Math.round(100 * dy / this.oldsize.height)/100;
 				this.shape.update();
-				this.update();		
-
+				this.update();
 			}
-
 		}
 	},
 	onup: function(){
@@ -346,9 +383,9 @@ debugDraw.Tools.transform = {
 	onkeyup: function(key){
 	},
 	update: function(){
-		this.size = { width: this.shape.aabb.xf - this.shape.aabb.x, 
+		this.size = { width: this.shape.aabb.xf  - this.shape.aabb.x, 
 				      height: this.shape.aabb.yf - this.shape.aabb.y};
-		this.points[0] = { x: this.shape.aabb.x ,
+		this.points[0] = { x: this.shape.aabb.x,
 						   y: this.shape.aabb.y};
 		this.points[1] = { x: this.shape.aabb.x,
 						   y: this.shape.aabb.yf};
@@ -366,17 +403,17 @@ debugDraw.Tools.transform = {
 						   y: (this.shape.aabb.y + this.shape.aabb.yf)/2};
 	},
 	draw: function(repos){
-		if (this.shape !== debugDraw.objects.selected() && debugDraw.objects.selected().type == 'shape'){
+		if (this.shape !== debugDraw.objects.selected()){
 			this.shape = debugDraw.objects.selected();
 			this.update();
 		}
-		if (this.shape != null && this.shape.type == 'shape'){
+		debugDraw.ctx.lineWidth   = 1;
+		debugDraw.ctx.strokeStyle = 'rgba(0, 0, 0, .7)';
+		if (this.shape != null){
 			debugDraw.ctx.beginPath();
 			debugDraw.ctx.rect(this.shape.aabb.x * repos, this.shape.aabb.y * repos,
-							(this.shape.aabb.xf - this.shape.aabb.x) * repos, 
-							(this.shape.aabb.yf - this.shape.aabb.y) * repos);
-			debugDraw.ctx.stroke();
-			debugDraw.ctx.beginPath();
+							  (this.shape.aabb.xf - this.shape.aabb.x) * repos, 
+							  (this.shape.aabb.yf - this.shape.aabb.y) * repos);
 			for (var i = 0; i < this.points.length; i++){
 				debugDraw.ctx.moveTo(this.points[i].x * repos + 5, this.points[i].y * repos);
 				debugDraw.ctx.arc(this.points[i].x * repos, this.points[i].y * repos,  5, 0, 2*Math.PI);
@@ -405,9 +442,9 @@ debugDraw.Tools.pen = {
 											origin: {x: debugDraw.Pointer.rX, y: debugDraw.Pointer.rY}}); 
 
 		}else if (debugDraw.objects.selected().type == 'shape'){
-			var points = debugDraw.objects.selected().points,
-				cpoints = debugDraw.objects.selected().cpoints,
-				 newpoint = {x: debugDraw.Pointer.rX , y: debugDraw.Pointer.rY};
+			var    points = debugDraw.objects.selected().points,
+				  cpoints = debugDraw.objects.selected().cpoints,
+				 newpoint = {x: debugDraw.Pointer.rX, y: debugDraw.Pointer.rY};
 			this.selectedpoints = [];
 		
 			if ((debugDraw.keyboard.keys[debugDraw.keyboard.key.CTRL])){
@@ -496,14 +533,14 @@ debugDraw.Tools.pen = {
 	},
 	onkeydown: function(e){
 		if (e.target === document.body && debugDraw.keyboard.key.BACKSPACE == e.which){
-			var point = debugDraw.objects.selected().points[debugDraw.objects.selected().points.length-1];
-			for (var i = 0; i < debugDraw.objects.selected().cpoints.length; i++)
-				if (debugDraw.objects.selected().cpoints[i].point === point){
-					debugDraw.objects.selected().cpoints.splice(i, 1);
+			var point = this.shape.points[this.shape.points.length-1];
+			for (var i = 0; i < this.shape.cpoints.length; i++)
+				if (this.shape.cpoints[i].point === point){
+					this.shape.cpoints.splice(i, 1);
 					i--;
 				}
-			debugDraw.objects.selected().points.splice(debugDraw.objects.selected().points.length-1, 1);
-			debugDraw.objects.selected().update();
+			this.shape.points.splice(this.shape.points.length-1, 1);
+			this.shape.update();
 		}
 	},
 	onkeyup: function(key){
@@ -514,32 +551,26 @@ debugDraw.Tools.pen = {
 			debugDraw.ctx.lineWidth = 2;
 			debugDraw.ctx.strokeStyle = 'rgba(0, 0, 0, .7)';
 			debugDraw.ctx.fillStyle = 'rgba(0, 0, 0, .9)';
-			//anchor points
-			for (var k = 0; k < this.shape.points.length; k++){
-				debugDraw.ctx.beginPath();
-				debugDraw.ctx.arc(this.shape.points[k].x * repos,
-						 		  this.shape.points[k].y * repos, 5, 0, 2*Math.PI);
-				debugDraw.ctx.fill();
-			}
-			//bezier curves
+			//bezier curves and points
+			debugDraw.ctx.beginPath();
 			for (var k = 0; k < this.shape.cpoints.length; k++){
-				debugDraw.ctx.beginPath();
+				if (this.shape.points[k] != undefined){
+					debugDraw.ctx.moveTo(this.shape.points[k].x * repos,
+										 this.shape.points[k].y * repos);
+					debugDraw.ctx.arc(this.shape.points[k].x * repos,
+							 		  this.shape.points[k].y * repos, 5, 0, 2*Math.PI);
+				}
 				debugDraw.ctx.moveTo(this.shape.cpoints[k].point.x * repos,
-									this.shape.cpoints[k].point.y * repos);
+									 this.shape.cpoints[k].point.y * repos);
 				debugDraw.ctx.lineTo(this.shape.cpoints[k].x * repos,
-						 		  	this.shape.cpoints[k].y * repos);
-				debugDraw.ctx.stroke();
+			 			 		  	 this.shape.cpoints[k].y * repos);
+				debugDraw.ctx.moveTo(this.shape.cpoints[k].x * repos,
+			 			 		  	 this.shape.cpoints[k].y * repos);
+				debugDraw.ctx.arc(this.shape.cpoints[k].x  * repos,
+					 		      this.shape.cpoints[k].y * repos, 5, 0, 2*Math.PI);
 			}
-			//bezier points
-			debugDraw.ctx.strokeStyle = 'rgba(255, 198, 0, .7)';
-			for (var k = 0; k < this.shape.cpoints.length; k++){
-				debugDraw.ctx.beginPath();
-				if ((this.shape.cpoints[k].x != this.shape.cpoints[k].point.x) ||
-					(this.shape.cpoints[k].y != this.shape.cpoints[k].point.y))
-					debugDraw.ctx.arc(this.shape.cpoints[k].x * repos,
-						 		  this.shape.cpoints[k].y * repos, 5, 0, 2*Math.PI);
-				debugDraw.ctx.fill();
-			}		
+			debugDraw.ctx.stroke();
+			debugDraw.ctx.fill();
 		}
 	}
 };
