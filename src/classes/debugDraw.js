@@ -12,7 +12,7 @@ debugDraw.set = function (){
 	this.canvas.height = window.innerHeight;
 	this.ctx = this.canvas.getContext("2d");
     this.Camera.set();
-	this.Pointer.set();
+	Pointer.set();
 	this.keyboard.set();
 
 	this.SetSprite(this.ctx);
@@ -27,8 +27,8 @@ debugDraw.set = function (){
 
 
 debugDraw.resize = function(){
-	this.canvas.width  = window.innerWidth  - $('#canvas_debug').offset().left;
-	this.canvas.height = window.innerHeight - $('#canvas_debug').offset().top;
+	this.canvas.width  = window.innerWidth  - 250;
+	this.canvas.height = window.innerHeight - 70;
 	this.m_drawScale   = World.scale * this.Camera.scale;
 	this.Camera.set();
 	debugDraw.ctx.translate( (this.Camera.position_dif.x - this.Camera.position.x) * (World.scale * this.scale), 
@@ -100,9 +100,10 @@ debugDraw.draw = function (){
 	
 	World.DrawDebugData();
 	//this.grid();
-	this.objects.draw();
-	this.Tools.draw(repos);
-	this.Pointer.draw();
+	//this.objects.draw();
+	Objects_list.render({ctx: debugDraw.ctx, repos: repos});
+	Tools.render({ctx: debugDraw.ctx, repos: repos});
+	Pointer.render({ctx: debugDraw.ctx, repos: repos});
 }
 
 debugDraw.Camera = {
@@ -134,7 +135,7 @@ debugDraw.Camera.update = function (){
 						    (this.position_dif.y - this.position.y) * (World.scale * this.scale)); 
 	this.position_dif.x = this.position.x;
 	this.position_dif.y = this.position.y;
-	debugDraw.Pointer.pointerMove();
+	Pointer.pointerMove();
 }
 
 debugDraw.keyboard = {
@@ -188,7 +189,7 @@ debugDraw.keyboard = {
 	}
 } 
 
-debugDraw.Pointer = {
+var Pointer = {
 	elem       : null,
 	X          : 0,
 	Y          : 0,
@@ -198,41 +199,43 @@ debugDraw.Pointer = {
 	DragY      : 0,
 	wheelDelta : 0,
 	isDown     : false,
-	draw : function(){
-		debugDraw.ctx.strokeStyle = 'rgba(250, 0, 0, .9)';
-		debugDraw.ctx.lineWidth = 3;
-		debugDraw.ctx.beginPath();
-		debugDraw.ctx.arc(this.rX * (World.scale * debugDraw.Camera.scale), 
-					 		this.rY * (World.scale * debugDraw.Camera.scale), 
+	render : function(_args){
+		var ctx = _args.ctx, repos = _args.repos;
+		ctx.lineWidth = 2;
+		ctx.beginPath();
+		ctx.fillStyle = 'rgba(255, 198, 0, .7)';
+		ctx.strokeStyle = 'rgba(0, 0, 0, .7)';
+		debugDraw.ctx.arc(this.rX * repos, 
+					 		this.rY * repos, 
 					 		5, 0, 2*Math.PI);
-		debugDraw.ctx.stroke();
+		ctx.stroke();
 	},
 	pointerDown : function (e) {
 		if (!this.isDown) {
 			this.isDown = true;
 			this.evt = e;
-			this.X  = e.pageX - (window.innerWidth - debugDraw.canvas.width);
+			this.X  = e.pageX;
 			this.Y  = e.pageY - (window.innerHeight - debugDraw.canvas.height);
 			this.DragX = this.rX;
 			this.DragY = this.rY;
 
-			debugDraw.Tools.onclick();
+			Tools.onclick();
 		}
 
 	},
 	pointerMove : function(e) {
 		if (e != undefined){
-			this.X  = e.pageX - (window.innerWidth - debugDraw.canvas.width);
+			this.X  = e.pageX;
 			this.Y  = e.pageY - (window.innerHeight - debugDraw.canvas.height);
 		}
 		this.rX = debugDraw.Camera.position.x - debugDraw.Camera.size.width  + this.X / (World.scale * debugDraw.Camera.scale),
 		this.rY = debugDraw.Camera.position.y - debugDraw.Camera.size.height + this.Y / (World.scale * debugDraw.Camera.scale);
     	
-		debugDraw.Tools.onmove();		
+		Tools.onmove();		
 	},
 	pointerUp : function(e) {
 		this.isDown = false;
-		debugDraw.Tools.onup();
+		Tools.onup();
 	},
 	pointerCancel : function(e) {
 		this.isDown = false;

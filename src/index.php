@@ -4,39 +4,58 @@
         <meta charset="utf8" />
         <meta http-equiv="X-UA-Compatible" content="IE=edge" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui" />
-        
-        <link rel="stylesheet" href="mdl/material.min.css">
-        <script src="mdl/material.min.js"></script>
-
-        <script src="lib/jquery/jquery.js"></script>
-        <script src="lib/jquery/jquery-ui.min.js"></script>
-
+        <title>Box2dWeb JS Editor</title>
         <link rel="stylesheet" href="style.css">
         <script src="lib/Box2dWeb.min.js"></script>
         <script src="classes/box2d.js"></script>
     </head>
 
     <body>
-        <?php include 'controls.php'; ?>
+        <div id="topbar">
+            <div id="toolbar">
+                <span class="clear"></span>
+            </div>
+            <div id="tool_properties">
+            </div>
+        </div>
+        <div id="workspace">
+            <table cellspacing="0" cellpadding="0">
+                <tr> 
+                    <td id="td_canvas">
+                        <canvas id="canvas_debug"></canvas>
+                    </td>
+                    <td id="td_panel" valign="top"> 
+                        <h3>Objects</h3>
+                        <ul id="list_objects">
+                        </ul>
+                        <div id="properties_menu"></div>
+                        <h3>Properties</h3>
+                        <div id="object_properties">
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <script src="classes/utils.js"></script>
         <script src="classes/world.js"></script>
         <script src="classes/debugDraw.js"></script>
         <script src="classes/objects.js"></script>
         <script src="classes/tools.js"></script>
-        <script src="classes/utils.js"></script>
+        <script src="classes/pointer.js"></script>
         <script>
             debugDraw.set();
-            ground = Box2d.create_box({x: 50, y: 15}, {width: 100, height: 1}, {type: b2Body.b2_staticBody});
+        </script>
+        <script src="classes/menu.js"></script>
+        <script src="classes/properties.js"></script>
+        <script src="classes/objectlist.js"></script>
+        <script src="classes/init.js"></script>
+        <script>
             loop();
-            
-            var lastTime = Date.now(), deltaTime;
 
             function loop() {
-                deltaTime = (new Date().getTime() - lastTime)/1000;
-                lastTime = Date.now();
-                
-                requestAnimationFrame(loop);
                 World.update();
                 debugDraw.draw();
+                requestAnimationFrame(loop);
             }
         </script>
     </body>
