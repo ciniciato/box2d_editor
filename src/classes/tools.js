@@ -1,12 +1,11 @@
 var Tools = {
-	control: debugDraw,
 	prev: null,
 	selected: null,
 	set: function(id){
 		if (this.selected !== this[id]){
 			this.selected = this[id];
 			this.prev = id;
-			this.control.canvas.style.cursor = this[id].cursor;
+			Camera.canvas.style.cursor = this[id].cursor;
 			this.selected.init();
 		}
 	},
@@ -52,30 +51,28 @@ Tools.pen = {
 	},
 	onclick: function(){
 		if (this.shape() == null){
-			Objects.addbody();
-			Objects_list.select(Objects.addshape({ref: Objects_list.last(),
-								properties: {
+			Objects_list.select(Objects_list.add_item(new object.body()).add_item(new object.shape({
+					properties: {
 									threshold: this.properties.threshold,
 									restitution: this.properties.restitution,
 									friction: this.properties.friction,
 									density: this.properties.density								
 								}
-				}).id); 
+					})).id);
 			this.shape().object.add_point({x: Pointer.rX, y: Pointer.rY});
 		} else if (this.shape().object.type == 'body'){
-			Objects_list.select(Objects.addshape({ref: this.shape(),
-								properties: {
+			Objects_list.select(this.shape.add_item(new object.shape({
+					properties: {
 									threshold: this.properties.threshold,
 									restitution: this.properties.restitution,
 									friction: this.properties.friction,
 									density: this.properties.density								
 								}
-				}).id); 
+					})).id);
 			this.shape().object.add_point({x: Pointer.rX, y: Pointer.rY});
 		} else if (this.shape().object.type == 'shape'){
 			this.shape().object.add_point({x: Pointer.rX, y: Pointer.rY});
 			var points = this.shape().object.cpoints;
-
 			//Select bezier anchors to selected points, so you can move then
 			this.selectedpoints = [];
 			this.selectedpoints.push(points[points.length - 1]);

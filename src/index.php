@@ -38,23 +38,20 @@
         </div>
         <script src="classes/utils.js"></script>
         <script src="classes/world.js"></script>
-        <script src="classes/debugDraw.js"></script>
-        <script src="classes/objects.js"></script>
+        <script src="classes/camera.js"></script>
+        <script src="classes/control.js"></script>
+        <script src="classes/physic_object.js"></script>
         <script src="classes/tools.js"></script>
         <script src="classes/pointer.js"></script>
-        <script>
-            debugDraw.set();
-        </script>
+        <script src="classes/keys.js"></script>
         <script src="classes/menu.js"></script>
         <script src="classes/properties.js"></script>
         <script src="classes/objectlist.js"></script>
         <script src="classes/init.js"></script>
         <script>
             loop();
-
             function loop() {
-                World.update();
-                debugDraw.draw();
+                Control.render();
                 requestAnimationFrame(loop);
             }
         </script>

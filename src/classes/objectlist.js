@@ -1,61 +1,81 @@
-function object_container(_args){
-	var _args = (_args == undefined) ? {} : _args;
-	this.elem = null;
-	this.children = [];
-	this.parent = null;
-	this.id = '';
-	this.object = (_args.object == undefined) ? {} : _args.object;
-	this.caption = (_args.object == undefined) ? 'Undefined' : _args.object.type;
-	this.icon = (_args.icon == undefined) ? 'report' : _args.icon;
-	this.init = function(){
-		var tree = this.parent, ntree = 0, i = 0, type_count = 0;
-		for (i = 0; i < tree.children.length; i++)
-			if (this.object.type == tree.children[i].object.type)
-					type_count++;
-		this.caption += '_'+type_count;
-		while (tree.parent != null){
-			tree = tree.parent;
-			ntree++;
-		}	
-		this.id = this.caption + this.parent.children.length;
-		if (this.parent.id != undefined)
-			this.id = this.parent.id + this.id;
-		var node = document.createElement("li");
-		this.elem = this.parent.elem.content.appendChild(node); 
-		this.elem.innerHTML = 	'<span class="wrap">'+
-									'<i class="material-icons btn_view">visibility</i>'+
-							  		'<span id="'+this.id+'" class="caption sub_'+ntree+
-							  				'" onclick="Objects_list.select(&quot;'+this.id+'&quot;)">'
-							  				+this.caption+
-										'<i class="material-icons">'+this.icon+'</i>'+
-							   		'</span>'+
-							   	'</span>';
-		this.elem.innerHTML = this.elem.innerHTML + '<ul class="list"></ul>';
-		this.elem.className = 'group';
-		this.elem.content = this.elem.getElementsByClassName('list')[0];
-		this.elem.caption = this.elem.getElementsByClassName('caption')[0];
-	};
-	this.changetitle = function(val){
-		str = this.elem.caption.innerHTML;
-		this.elem.caption.innerHTML = val + str.substring(str.indexOf("<i"), str.length);
-	};
-	this.add_item = function(i){
-		i.parent = this;
-		i.init();
-		this.children.push(i);
-		return i;
-	};
-	this.last = function(){
-		return this.children[this.children.length - 1];
-	};
-	this.paste = function(_args){
-		var r = _args.parent.add_item(new object_container({object: this.object.paste(), icon: this.icon}));
-		r.object.properties.name = r.caption;
-		for (var i = 0; i < this.children.length; i++){
-			this.children[i].paste({parent: r});
+var object = {
+	container : function(_args){
+		var _args     = (_args == undefined) ? {} : _args;
+		this.elem     = null;
+		this.children = [];
+		this.parent   = null;
+		this.id       = '';
+		this.object   = (_args.object == undefined) ? {} : _args.object;
+		this.caption  = (_args.object == undefined) ? 'Undefined' : _args.object.type;
+		this.icon     = (_args.icon == undefined) ? 'report' : _args.icon;
+		this.init = function(){
+			var tree = this.parent, ntree = 0, i = 0, type_count = 0;
+			for (i = 0; i < tree.children.length; i++)
+				if (this.object.type == tree.children[i].object.type)
+						type_count++;
+			this.caption += '_'+type_count;
+			while (tree.parent != null){
+				tree = tree.parent;
+				ntree++;
+			}	
+			this.id = this.caption + this.parent.children.length;
+			if (this.parent.id != undefined)
+				this.id = this.parent.id + this.id;
+			var node = document.createElement("li");
+			this.elem = this.parent.elem.content.appendChild(node); 
+			this.elem.innerHTML = 	'<span class="wrap">'+
+										'<i class="material-icons btn_view">visibility</i>'+
+								  		'<span id="'+this.id+'" class="caption sub_'+ntree+
+								  				'" onclick="Objects_list.select(&quot;'+this.id+'&quot;)">'
+								  				+this.caption+
+											'<i class="material-icons">'+this.icon+'</i>'+
+								   		'</span>'+
+								   	'</span>';
+			this.elem.innerHTML = this.elem.innerHTML + '<ul class="list"></ul>';
+			this.elem.className = 'group';
+			this.elem.content = this.elem.getElementsByClassName('list')[0];
+			this.elem.caption = this.elem.getElementsByClassName('caption')[0];
+		};
+		this.changetitle = function(val){
+			str = this.elem.caption.innerHTML;
+			this.elem.caption.innerHTML = val + str.substring(str.indexOf("<i"), str.length);
+		};
+		this.add_item = function(i){
+			i.parent = this;
+			i.init();
+			this.children.push(i);
+			return i;
+		};
+		this.last = function(){
+			return this.children[this.children.length - 1];
+		};
+		this.paste = function(_args){
+			var r = _args.parent.add_item(new object_container({object: this.object.paste(), icon: this.icon}));
+			r.object.properties.name = r.caption;
+			for (var i = 0; i < this.children.length; i++){
+				this.children[i].paste({parent: r});
+			}
 		}
 	}
 }
+
+object.body = function(_args){
+ 	object.container.call(this, {object: new physic_object.body(),
+ 									icon: 'accessibility'});
+	this.object.properties.name = this.caption;
+}
+
+object.body.prototype             = new object.container(); 
+object.body.prototype.constructor = object.body;
+
+object.shape = function(_args){
+  	object.container.call(this, {object: new physic_object.shape({properties: _args.properties}),
+  								icon: 'mode edit'});
+	this.object.properties.name = this.caption;
+}
+
+object.shape.prototype             = new object.container(); 
+object.shape.prototype.constructor = object.shape;
 
 var Objects_list = {
 	elem: document.getElementById('list_objects'),

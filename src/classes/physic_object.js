@@ -1,4 +1,4 @@
-var Objects = {
+var physic_object = {
 	body: function(_args){
 		this.type = 'body';
 
@@ -31,13 +31,6 @@ var Objects = {
 			}; 
 			return copy;
 		}
-	},
-	addbody: function(){
-		var t = Objects_list.add_item(new object_container({icon: 'accessibility', 
-											object: new Objects.body()
-										}));
-		t.object.properties.name = t.caption;
-		return t;
 	},
 	shape: function(_args){
 		this.type = 'shape';
@@ -144,12 +137,5 @@ var Objects = {
 			copy.update();
 			return copy;
 		};
-	},
-	addshape: function(_args){
-		var t = _args.ref.add_item(new object_container({icon: 'mode edit', 
-											object: new Objects.shape({properties: _args.properties})
-										}));
-		t.object.properties.name = t.caption;
-		return t;
 	}
 }

@@ -1,3 +1,5 @@
+Control.init();
+
 var ToolBar = new menu({div: 'toolbar'});
 
 ToolBar.add_item(new group({caption: 'Pen'}));
@@ -5,13 +7,13 @@ ToolBar.last().add_item(new button({caption: 'Pen',
 									icon: 'img/icon_addanchor.png', 
 								 onclick: function(){ 
 								 			Tools.set('pen')
-								 			Tools_properties.select(debugDraw.Tools.pen); 
+								 			Tools_properties.select(Tools.pen); 
 								 		}  
 								 }));
 ToolBar.last().add_item(new button({caption: 'Select points', 
 									icon: 'img/icon_selectpoint.png', 
 								 onclick: function(){ 
-								 			debugDraw.Tools.set('select_points'); 
+								 			Tools.set('select_points'); 
 								 			Tools_properties.select(); 
 								 		} 
 								 }));
