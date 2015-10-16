@@ -54,9 +54,10 @@ var object = {
 
 object.body = function(_args){
 	_args = (_args == undefined) ? {} : _args;
-	var obj = (_args.object != undefined) ? _args.object : new physic_object.body({});
+	var obj = (_args.object != undefined) ? _args.object : new physic_object.body({owner: this});
  	object.container.call(this, {object: obj,
  									icon: 'accessibility'});
+ 	this.object.owner = this;
 	this.object.properties.name = this.caption;
 }
 
@@ -72,9 +73,10 @@ object.body.prototype.paste = function(){
 
 
 object.shape = function(_args){
-	var obj = (_args.object != undefined) ? _args.object : new physic_object.shape({properties: _args.properties});
+	var obj = (_args.object != undefined) ? _args.object : new physic_object.shape({properties: _args.properties, owner: this});
   	object.container.call(this, {object: obj,
   								icon: 'mode edit'});
+ 	this.object.owner = this;
 	this.object.properties.name = this.caption;
 }
 

@@ -1,12 +1,12 @@
 var physic_object = {
 	body: function(_args){
+		var _args     = (_args == undefined) ? {} : _args;
+		this.owner = (_args.owner == undefined) ? null : _args.owner;
 		this.type = 'body';
 
 		//transform properties
 		this.aabb   = {x: null, y: null, xf: null, yf: null};
 		this.angle  = 0;
-		this.origin = {x: 0, y: 0};
-		this.scale  = {x: 1, y: 1};
 
 		//panel/physic properties, or may derivate from owner
 		this.properties = {
@@ -18,19 +18,76 @@ var physic_object = {
 		}; 
 
 		this.get_origin = function(){
-			//return {x: (this.aabb.x + this.aabb.xf) / 2, y: (this.aabb.y + this.aabb.yf) / 2};
-			return {x: 0, y: 0};
-		}
+			return {x: (this.aabb.x + this.aabb.xf) / 2, y: (this.aabb.y + this.aabb.yf) / 2};
+		};
 
 		this.set_origin = function(point){
-		}
+		};
 
 		this.get_size = function(){
-			return {width: 0, height: 0};
-			//return {width: Math.abs(this.aabb.x - this.aabb.xf) / 2, height: Math.abs(this.aabb.y - this.aabb.yf) / 2};
+			return {width: Math.abs(this.aabb.x - this.aabb.xf) / 2, height: Math.abs(this.aabb.y - this.aabb.yf) / 2};
+		};
+
+		this.update = function(){
+			var that = this;
+			this.aabb   = {x: null, y: null, xf: null, yf: null};
+			function setaabb(shape){
+		    	that.aabb.x  = (that.aabb.x < shape.x && that.aabb.x != null) ? 
+		    					that.aabb.x : shape.x;
+				that.aabb.xf = (that.aabb.xf > shape.xf && that.aabb.xf != null) ? 
+								that.aabb.xf : shape.xf;
+				that.aabb.y  = (that.aabb.y < shape.y && that.aabb.y != null) ? 
+								that.aabb.y : shape.y;
+				that.aabb.yf = (that.aabb.yf > shape.yf && that.aabb.yf != null) ? 
+								that.aabb.yf : shape.yf;
+			}
+			for (var i = 0; i < this.owner.children.length; i++){
+				setaabb(this.owner.children[i].object.aabb);
+			}
+		};
+
+		this.resize_render = function(scale){
+			var
+				dx = this.get_origin().x,
+				dy = this.get_origin().y;
+			for (var i = 0; i < this.owner.children.length; i++){
+				var
+					px = this.owner.children[i].object.get_origin().x - dx,
+					py = this.owner.children[i].object.get_origin().y - dy;
+				this.owner.children[i].object.update();
+				this.owner.children[i].object.resize_render(scale);
+				this.owner.children[i].object.move_render({x: dx + px * scale.x, y: dy + py * scale.y});
+			}
+		};
+
+		this.resize = function(scale){
+			var
+				dx = this.get_origin().x,
+				dy = this.get_origin().y;
+			for (var i = 0; i < this.owner.children.length; i++){
+				var
+					px = this.owner.children[i].object.get_origin().x - dx,
+					py = this.owner.children[i].object.get_origin().y - dy;
+				this.owner.children[i].object.set_origin({x: dx + px * scale.x, y: dy + py * scale.y});
+				this.owner.children[i].object.resize(scale);
+			}
+		};
+
+		this.set_origin = function(point){
+			var
+				dx = this.get_origin().x - point.x,
+				dy = this.get_origin().y - point.y;
+			for (var i = 0; i < this.owner.children.length; i++){
+				var
+					px = this.owner.children[i].object.get_origin().x - dx,
+					py = this.owner.children[i].object.get_origin().y - dy;
+				this.owner.children[i].object.set_origin({x: px, y: py});
+
+			}
+			this.update();
 		}
 
-		this.render = function(){
+		this.render = function(scale){
 		};
 
 		this.paste = function(){
@@ -43,15 +100,16 @@ var physic_object = {
 				fixedRotation: this.properties.fixedRotation
 			}; 
 			return copy;
-		}
+		};
 	},
 	shape: function(_args){
+		var _args     = (_args == undefined) ? {} : _args;
+		this.owner = (_args.owner == undefined) ? null : _args.owner;
 		this.type = 'shape';
 
 		//transform properties
 		this.aabb   = {x: null, y: null, xf: null, yf: null};
 		this.angle  = 0;
-		this.origin = {x: 0, y: 0};
 
 		//panel/physic properties, or may derivate from owner
 		if (_args.properties == undefined)
@@ -152,14 +210,28 @@ var physic_object = {
 				if (this.fpoints == null) this.fpoints = [];
 			} else {
 				this.fpoints = this.rpoints;
-			}						 
+			}		
+			//remove 'if', it must have owner
+			if (this.owner != undefined)
+				this.owner.parent.object.update();				 
 		};
 
-		this.resize_render = function(scale){
-			this.update();
+
+		this.move_render = function(point){
+			var old_origin = this.get_origin();
 			for (var i = 0; i < this.rpoints.length; i++){
-				this.rpoints[i].x = this.get_origin().x + (this.rpoints[i].x - this.get_origin().x) * scale.x;
-				this.rpoints[i].y = this.get_origin().y + (this.rpoints[i].y - this.get_origin().y) * scale.y;
+				this.rpoints[i].x -= old_origin.x - point.x;
+				this.rpoints[i].y -= old_origin.y - point.y;
+			}
+		} 
+
+		this.resize_render = function(scale){
+			if (scale.x != 1 || scale.y != 1){
+				this.update();
+				for (var i = 0; i < this.rpoints.length; i++){
+					this.rpoints[i].x = this.get_origin().x + (this.rpoints[i].x - this.get_origin().x) * scale.x;
+					this.rpoints[i].y = this.get_origin().y + (this.rpoints[i].y - this.get_origin().y) * scale.y;
+				}
 			}
 		}
 

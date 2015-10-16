@@ -156,9 +156,18 @@ Tools.transform = {
 	origin: {x: null, y: null},
 	size: {width: null, height: null},
 	scale: {x: 1, y: 1},
+	pI : {x: null, y: null},//pointer initial position
 	shape: function () { return Objects_list.selected; },
 	properties: {
-		width: '.05'
+		width: '1',
+		height: '1'
+	},
+	reset_properties: function(){
+		this.scale = {x: 1, y: 1};
+		this.properties = {
+			width: '1',
+			height: '1'
+		};
 	},
 	init : function(){
 	},
@@ -173,6 +182,7 @@ Tools.transform = {
 						this.shape().object.set_origin({
 								x: this.origin.x - (Pointer.DragX - Pointer.rX),
 								y: this.origin.y - (Pointer.DragY - Pointer.rY)});
+						this.shape().object.resize_render(this.scale);	
 						Pointer.DragX = Pointer.rX;
 						Pointer.DragY = Pointer.rY;
 					} else if (this.option.indexOf('resize') > -1){
@@ -185,6 +195,11 @@ Tools.transform = {
 						else {
 							this.scale.y = utils.round(disty / this.size.height, 100);
 							this.scale.x = utils.round(distx / this.size.width, 100);
+						}
+						if (this.properties.width != this.scale.x || this.properties.height != this.scale.y){
+							Tools_properties.select(Tools.transform); 
+							this.properties.width = this.scale.x;
+							this.properties.height = this.scale.y;
 						}
 						this.shape().object.resize_render(this.scale);	
 					}
@@ -199,7 +214,9 @@ Tools.transform = {
 						}
 				    }
 				if (!flag)
-					if (Pointer.intersect({position: this.origin, size: this.size}))
+					if (Pointer.intersect({position: this.origin, 
+							size: {width: this.size.width * Math.abs(this.scale.x),
+									height: this.size.height * Math.abs(this.scale.y)} }))
 						this.option = 'move';
 					else
 						this.option = 'default';
@@ -208,13 +225,14 @@ Tools.transform = {
 		}
 	},
 	onup: function(){
-		if (this.option.indexOf('resize') > -1){
-			this.shape().object.resize(this.scale);	
-			this.scale = {x: 1, y: 1};
-			this.update();
-		}
 	},
 	onkeydown: function(e){
+		if (e.keyCode == Keys.ENTER){
+			this.shape().object.resize(this.scale);	
+			this.reset_properties();
+			Tools_properties.select(Tools.transform); 
+			this.update();
+		}
 	},
 	onkeyup: function(key){
 	},
@@ -242,23 +260,26 @@ Tools.transform = {
 	},
 	update: function(){
 		if (this.shape() != undefined){
+			this.scale.x = parseFloat(this.properties.width);
+			this.scale.y = parseFloat(this.properties.height);
 			this.origin = this.shape().object.get_origin();
 			this.size = this.shape().object.get_size();
-			this.points.nw = {x: this.origin.x - this.size.width * this.scale.x, 
-								y: this.origin.y - this.size.height * this.scale.y};
+			this.shape().object.resize_render(this.scale);	
+			this.points.nw = {x: this.origin.x - this.size.width * Math.abs(this.scale.x), 
+								y: this.origin.y - this.size.height * Math.abs(this.scale.y)};
 			this.points.n = {x: this.origin.x, 
-								y: this.origin.y - this.size.height * this.scale.y};
-			this.points.ne = {x: this.origin.x + this.size.width * this.scale.x, 
-								y: this.origin.y - this.size.height * this.scale.y};
-			this.points.e = {x: this.origin.x + this.size.width * this.scale.x, 
+								y: this.origin.y - this.size.height * Math.abs(this.scale.y)};
+			this.points.ne = {x: this.origin.x + this.size.width * Math.abs(this.scale.x), 
+								y: this.origin.y - this.size.height * Math.abs(this.scale.y)};
+			this.points.e = {x: this.origin.x + this.size.width * Math.abs(this.scale.x), 
 								y: this.origin.y};
-			this.points.se = {x: this.origin.x + this.size.width * this.scale.x, 
-								y: this.origin.y + this.size.height * this.scale.y};
+			this.points.se = {x: this.origin.x + this.size.width * Math.abs(this.scale.x), 
+								y: this.origin.y + this.size.height * Math.abs(this.scale.y)};
 			this.points.s = {x: this.origin.x, 
-								y: this.origin.y + this.size.height * this.scale.y};
-			this.points.sw = {x: this.origin.x - this.size.width * this.scale.x, 
-								y: this.origin.y + this.size.height * this.scale.y};
-			this.points.w = {x: this.origin.x - this.size.width * this.scale.x, 
+								y: this.origin.y + this.size.height * Math.abs(this.scale.y)};
+			this.points.sw = {x: this.origin.x - this.size.width * Math.abs(this.scale.x), 
+								y: this.origin.y + this.size.height * Math.abs(this.scale.y)};
+			this.points.w = {x: this.origin.x - this.size.width * Math.abs(this.scale.x), 
 								y: this.origin.y};
 		}
 	}
