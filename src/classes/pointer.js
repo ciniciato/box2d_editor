@@ -8,6 +8,18 @@ var Pointer = {
 	DragY      : 0,
 	wheelDelta : 0,
 	isDown     : false,
+	hasMoved   : false,
+	cursor     : 'default',
+	set_cursor: function(_cursor){
+		if (this.cursor != _cursor){
+			this.elem.style.cursor = _cursor;
+			this.cursor = _cursor;
+		}
+	},
+	intersect: function(area){
+		return (Math.abs(this.rX - area.position.x) < area.size.width && 
+					Math.abs(this.rY - area.position.y) < area.size.height);
+	},
 	render : function(_args){
 		var ctx = _args.ctx, repos = _args.repos;
 		ctx.lineWidth = 2;
@@ -39,6 +51,8 @@ var Pointer = {
 		this.rX = Camera.position.x - Camera.size.width  + this.X / (World.scale * Camera.scale),
 		this.rY = Camera.position.y - Camera.size.height + this.Y / (World.scale * Camera.scale);
     	
+    	this.hasMoved = (this.rX != this.DragX || this.rY != this.DragY);
+		
 		Tools.onmove();		
 	},
 	pointerUp : function(e) {
@@ -80,14 +94,14 @@ var Pointer = {
 		if (window.addEventListener) this.elem.addEventListener('DOMMouseScroll', function(e) { 
 			self.wheelDelta = e.detail * 10;
 	        var value =  Camera.scale - e.detail/30;
-	        if (value >= .1)
+	        if (value >= .5)
 		        Camera.zoom(value);
 			return false; 
 		}, false); 
 		this.elem.onmousewheel = function () { 
 			self.wheelDelta = -event.wheelDelta * .25;
 	        var value =  Camera.scale - self.wheelDelta/30;
-	        if (value >= .1)
+	        if (value >= .5)
 		        Camera.zoom(value);
 			return false; 
 		}

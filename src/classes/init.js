@@ -10,11 +10,11 @@ ToolBar.last().add_item(new button({caption: 'Pen',
 								 			Tools_properties.select(Tools.pen); 
 								 		}  
 								 }));
-ToolBar.last().add_item(new button({caption: 'Select points', 
-									icon: 'img/icon_selectpoint.png', 
+ToolBar.last().add_item(new button({caption: 'Transform', 
+									icon: 'img/icon_transform.png', 
 								 onclick: function(){ 
-								 			Tools.set('select_points'); 
-								 			Tools_properties.select(); 
+								 			Tools.set('transform'); 
+								 			Tools_properties.select(Tools.transform); 
 								 		} 
 								 }));
 ToolBar.add_item(new group({caption: 'Shapes'}));
@@ -34,7 +34,7 @@ Properties_menu.add_item(new button({caption: 'New Body',
 									size: 'small',
 									icon: 'accessibility', 
 								 onclick: function(){ 
-											Objects_list.select(Objects.addbody().id);
+											Objects_list.select(Objects_list.add_item(new object.body()).id);
 								 		}  
 								 }));
 Properties_menu.add_item(new button({caption: 'Delete',
@@ -70,8 +70,8 @@ Tools_properties.last().add_item(new field({caption: 'friction', type: 'text'}))
 Tools_properties.last().add_item(new field({caption: 'restitution', type: 'text'}));
 Tools_properties.last().add_item(new field({caption: 'threshold', type: 'text'}));
 
-Tools_properties.add_item(new property_group({caption: 'select_points', orientation: 'horizontal'}));
-Tools_properties.last().add_item(new field({caption: 'nameasd', type: 'text'}));
+Tools_properties.add_item(new property_group({caption: 'transform', orientation: 'horizontal'}));
+Tools_properties.last().add_item(new field({caption: 'width', type: 'text'}));
 
 var Objects_properties = new properties_container({	id: 'object_properties', 
 													varname: 'Objects_properties',

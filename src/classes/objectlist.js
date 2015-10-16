@@ -49,18 +49,13 @@ var object = {
 		this.last = function(){
 			return this.children[this.children.length - 1];
 		};
-		this.paste = function(_args){
-			var r = _args.parent.add_item(new object_container({object: this.object.paste(), icon: this.icon}));
-			r.object.properties.name = r.caption;
-			for (var i = 0; i < this.children.length; i++){
-				this.children[i].paste({parent: r});
-			}
-		}
 	}
 }
 
 object.body = function(_args){
- 	object.container.call(this, {object: new physic_object.body(),
+	_args = (_args == undefined) ? {} : _args;
+	var obj = (_args.object != undefined) ? _args.object : new physic_object.body({});
+ 	object.container.call(this, {object: obj,
  									icon: 'accessibility'});
 	this.object.properties.name = this.caption;
 }
@@ -68,14 +63,30 @@ object.body = function(_args){
 object.body.prototype             = new object.container(); 
 object.body.prototype.constructor = object.body;
 
+object.body.prototype.paste = function(){
+	var r = this.parent.add_item(new object.body({object: this.object.paste()}));
+	for (var i = 0; i < this.children.length; i++){
+		this.children[i].paste({parent: r});
+	}
+}
+
+
 object.shape = function(_args){
-  	object.container.call(this, {object: new physic_object.shape({properties: _args.properties}),
+	var obj = (_args.object != undefined) ? _args.object : new physic_object.shape({properties: _args.properties});
+  	object.container.call(this, {object: obj,
   								icon: 'mode edit'});
 	this.object.properties.name = this.caption;
 }
 
 object.shape.prototype             = new object.container(); 
 object.shape.prototype.constructor = object.shape;
+
+object.shape.prototype.paste = function(_args){
+	_args = (_args == undefined) ? {} : _args;
+	_args.parent = (_args.parent == undefined) ? this.parent : _args.parent;
+	if (_args.parent.object.type == 'shape') _args.parent = _args.parent.parent;
+	_args.parent.add_item(new object.shape({object: this.object.paste()}));
+}
 
 var Objects_list = {
 	elem: document.getElementById('list_objects'),
@@ -146,11 +157,8 @@ var Objects_list = {
 		}
 	},
 	paste: function(){
-		var _parent = this;
-		if (this.selected != null && this.selected.object.type == 'shape')
-				_parent = this.selected.parent;
 		if (this.copy_buffer != null)
-			this.copy_buffer.paste({parent: _parent});
+			this.copy_buffer.paste({parent: this.selected});
 	}
 }
 

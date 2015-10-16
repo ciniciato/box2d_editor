@@ -33,7 +33,7 @@ Grid.render = function(_args){
 		var pos   = (orientation == 'vertical') ? 'x' : 'y', 
 			size  = (orientation == 'vertical') ? 'width' : 'height',
 			end   = Camera.position[pos] + Camera.size[size],
-			step  = that.cellsize/(Math.round(Camera.scale)),
+			step  = that.cellsize/Math.round(Camera.scale),
 			reset = (Camera.position[pos] - Camera.size[size]) 
 					- (Camera.position[pos] - Camera.size[size]) % step;
 		strongerline = function(i){
