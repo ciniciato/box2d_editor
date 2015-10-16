@@ -38,23 +38,20 @@
         </div>
         <script src="https://raw.githubusercontent.com/ciniciato/box2d_editor/master/src/classes/utils.js"></script>
         <script src="https://raw.githubusercontent.com/ciniciato/box2d_editor/master/src/classes/world.js"></script>
-        <script src="https://raw.githubusercontent.com/ciniciato/box2d_editor/master/src/classes/debugDraw.js"></script>
-        <script src="https://raw.githubusercontent.com/ciniciato/box2d_editor/master/src/classes/objects.js"></script>
+        <script src="https://raw.githubusercontent.com/ciniciato/box2d_editor/master/src/classes/camera.js"></script>
+        <script src="https://raw.githubusercontent.com/ciniciato/box2d_editor/master/src/classes/control.js"></script>
+        <script src="https://raw.githubusercontent.com/ciniciato/box2d_editor/master/src/classes/physic_object.js"></script>
         <script src="https://raw.githubusercontent.com/ciniciato/box2d_editor/master/src/classes/tools.js"></script>
         <script src="https://raw.githubusercontent.com/ciniciato/box2d_editor/master/src/classes/pointer.js"></script>
-        <script>
-            debugDraw.set();
-        </script>
+        <script src="https://raw.githubusercontent.com/ciniciato/box2d_editor/master/src/classes/keys.js"></script>
         <script src="https://raw.githubusercontent.com/ciniciato/box2d_editor/master/src/classes/menu.js"></script>
         <script src="https://raw.githubusercontent.com/ciniciato/box2d_editor/master/src/classes/properties.js"></script>
         <script src="https://raw.githubusercontent.com/ciniciato/box2d_editor/master/src/classes/objectlist.js"></script>
         <script src="https://raw.githubusercontent.com/ciniciato/box2d_editor/master/src/classes/init.js"></script>
         <script>
             loop();
-
             function loop() {
-                World.update();
-                debugDraw.draw();
+                Control.render();
                 requestAnimationFrame(loop);
             }
         </script>
