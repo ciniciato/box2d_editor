@@ -82,22 +82,24 @@ var physic_object = {
 			this.fpoints = [];
 			//bezier interpolation
 			for (var k = 1; k < this.cpoints.length; k += 2){
+		    	this.rpoints.push({x: this.points[Math.floor(k/2)].x, y: this.points[Math.floor(k/2)].y});
 				if (this.cpoints[k+1] != undefined)
 		    		for (var t = 0.0; t <= 1.00001; t += threshold) {
-		    			newpoint =  bezierInterpolation(t, this.cpoints[k].point, this.cpoints[k], 
-		    							this.cpoints[k+1], this.cpoints[k+1].point);
-		    			this.rpoints.push(newpoint);	
+		    			this.rpoints.push(bezierInterpolation(t, this.cpoints[k].point, this.cpoints[k], 
+		    							this.cpoints[k+1], this.cpoints[k+1].point));
+				    	//remove duplicate points and nearer points 
+				    	this.rpoints[this.rpoints.length-1].x = this.rpoints[this.rpoints.length-1].x;
+				    	this.rpoints[this.rpoints.length-1].y = this.rpoints[this.rpoints.length-1].y;
+						this.rpoints = this.rpoints.removeDuplicates();
 		    		}
 	    	};
-	    	//remove duplicate points
-			this.rpoints = this.rpoints.removeDuplicates();
 	    	//triangulation
 	    	this.isComplex = false;
 			if (Box2d.Math.ClockWise(this.rpoints) === CLOCKWISE)
 				this.rpoints.reverse();
 			if (Box2d.Math.Convex(this.rpoints) === CONCAVE){
 				this.fpoints = Box2d.Math.process(this.rpoints);
-				this.complex = (this.fpoints == null) ? null : true;
+				this.isComplex = (this.fpoints == null) ? null : true;
 				if (this.fpoints == null) this.fpoints = [];
 			} else {
 				this.fpoints = this.rpoints;
@@ -107,15 +109,27 @@ var physic_object = {
 		this.render = function(_args){
 			var ctx = _args.ctx, repos = _args.repos;
 			ctx.lineWidth = 2;
-			ctx.beginPath();
 			ctx.fillStyle = 'rgba(255, 198, 0, .7)';
 			ctx.strokeStyle = 'rgba(0, 0, 0, .7)';
+			ctx.beginPath();
 			//Render shape countor
 			for (var k = 0; k < this.rpoints.length; k++){
 				ctx.lineTo(this.rpoints[k].x * repos,
-			    			this.rpoints[k].y * repos);
+			    			this.rpoints[k].y * repos)
 			}
+			for (var k = 0; k < this.fpoints.length && this.isComplex; k += 3)
+				if (this.fpoints[k+2]!=undefined){
+					ctx.moveTo(this.fpoints[k].x * repos,
+						 		     	 this.fpoints[k].y * repos);
+					ctx.lineTo(this.fpoints[k+1].x * repos,
+						 		     	 this.fpoints[k+1].y * repos);
+					ctx.lineTo(this.fpoints[k+2].x * repos,
+						 		     	 this.fpoints[k+2].y * repos);
+					ctx.lineTo(this.fpoints[k].x * repos,
+						 		     	 this.fpoints[k].y * repos);
+				}
 			ctx.stroke();
+			ctx.fill();
 		};
 
 		this.paste = function(){

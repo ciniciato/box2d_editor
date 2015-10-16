@@ -62,7 +62,9 @@ function field(_args){
 		this.elem = this.parent.elem.content.appendChild(node);
 		this.elem.innerHTML = '<'+tag+' class="caption">'+this.caption+':</'+tag+'>';
 		if (this.type == 'text')
-			this.elem.innerHTML += '<'+tag+' class="input"><input class="content" oninput="'+tree.varname+'.change(&quot;'+this.caption+'&quot;)" type="text"></td>';
+			this.elem.innerHTML += '<'+tag+' class="input"><input class="content" oninput="'+tree.varname+
+				'.change({field: &quot;'+this.caption+'&quot;})" onchange="'+tree.varname+'.change({field: &quot;'+
+					this.caption+'&quot;, update: true})" type="text"></td>';
 		else if (this.type == 'select'){
 			var str = '<'+tag+' class="input"><select class="content"  onchange="'+tree.varname+'.change(&quot;'+this.caption+'&quot;)">';
 			for (var i = 0; i < this.options.length; i++){
@@ -87,8 +89,8 @@ function field(_args){
 
 function properties_container(_args){
 	this.elem = document.getElementById(_args.id);
-	this.object = (_args.object == undefined) ? null : _args.object;
 	this.p_object = (_args.p_object == undefined) ? null : _args.p_object;
+	this.object = (_args.object == undefined) ? null : _args.object;
 	this.varname = (_args.varname == undefined) ? 'undefined' : _args.varname;
 	this.orientation = (_args.orientation == undefined) ? 'vertical' : _args.orientation;
 	this.elem.className = 'properties_container properties_container_'+this.orientation;
@@ -104,13 +106,15 @@ function properties_container(_args){
 	this.last = function(){
 		return this.children[this.children.length - 1];
 	};
-	this.change = function(field){
-		var obj = (this.object != null) ? this.object : this.p_object();
-		for (i = 0; i < this.selected.children.length && this.selected.children[i].caption != field; i++){
+	this.change = function(_args){
+		var obj = (this.object == null) ? this.p_object() : this.object;
+		_args.update = (_args.update != undefined) ? _args.update : false;
+		for (i = 0; i < this.selected.children.length && this.selected.children[i].caption != _args.field; i++){
 		}
-		obj.properties[field] = (i < this.selected.children.length) ? 
+		obj.properties[_args.field] = (i < this.selected.children.length) ? 
 				this.selected.children[i].elem.content.value : null;
-		if (field == 'name')
+		if (_args.update) obj.update();
+		if (_args.field == 'name')
 			Objects_list.selected.changetitle(this.selected.children[i].elem.content.value);
 	};
 	this.select = function(obj){

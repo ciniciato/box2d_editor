@@ -81,8 +81,8 @@ html, body {
 	padding: 5px;
 	text-align: center;
 	line-height: 25px;
-	max-width: 25px;
-	max-height: 25px;
+	width: 25px;
+	height: 25px;
 	margin: 0 0px;
 	cursor: pointer;
 }
@@ -93,16 +93,21 @@ html, body {
 .menu .button_small{
 	border-radius: 5px;
 	padding: 2px;
-	line-height: 14px;
+	width: 25px;
+	height: 25px;
 }
 
 .menu .button_small i{
 	font-size: 20px;
+	line-height: 25px;
 }
 
 .menu .button img{
 	max-width: 25px;
 	max-height: 25px;
+	position: relative;
+	top: 50%;
+	transform: translateY(-50%);
 }
 
 .menu .button:hover{

@@ -1,3 +1,6 @@
+var utils = {
+}
+
 Array.prototype.removeDuplicates = function (){
   var temp = new Array();
   label : for (i = 0; i < this.length;i++){
@@ -10,11 +13,15 @@ Array.prototype.removeDuplicates = function (){
   return temp;
 } 
 
-function getSignal(_value){
+utils.getSignal = function(_value){
 	if (_value!=0)
 		return _value/Math.abs(_value);
 	else
 		return 0;
+}
+
+utils.round = function(val, amount){
+  return Math.round(val*amount)/amount;
 }
 
 function bezierInterpolation(t, a, b, c, d) {

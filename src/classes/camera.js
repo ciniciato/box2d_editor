@@ -41,16 +41,20 @@ Camera.zoom = function(_value){
 	this.resize();
 }
 
+Camera.clear = function(){
+	var repos = (World.scale * this.scale);
+	this.ctx.clearRect( (this.position.x - this.size.width)  * repos, 
+						(this.position.y - this.size.height) * repos, 
+						(this.position.x - this.size.width)  * repos + this.canvas.width, 
+						(this.position.y - this.size.height) * repos + this.canvas.height);
+}
+
 Camera.update = function (){	
 	var repos = (World.scale * this.scale);
 	this.position.x = (this.position.x - this.size.width <= 0) ? this.size.width : this.position.x;
 	this.position.y = (this.position.y - this.size.height <= 0) ? this.size.height : this.position.y;
 	this.ctx.translate((this.position_dif.x - this.position.x) * repos, 
 						    (this.position_dif.y - this.position.y) * repos); 
-	this.ctx.clearRect( (this.position.x - this.size.width)  * repos, 
-						(this.position.y - this.size.height) * repos, 
-						(this.position.x - this.size.width)  * repos + this.canvas.width, 
-						(this.position.y - this.size.height) * repos + this.canvas.height);
 	this.position_dif.x = this.position.x;
 	this.position_dif.y = this.position.y;
 	Pointer.pointerMove();

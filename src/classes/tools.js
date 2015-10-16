@@ -32,6 +32,9 @@ var Tools = {
 	render: function(_args){
 		if (this.selected != undefined)
 			this.selected.render(_args);
+	},
+	update: function(){
+		
 	}
 };
 
@@ -61,7 +64,7 @@ Tools.pen = {
 					})).id);
 			this.shape().object.add_point({x: Pointer.rX, y: Pointer.rY});
 		} else if (this.shape().object.type == 'body'){
-			Objects_list.select(this.shape.add_item(new object.shape({
+			Objects_list.select(this.shape().add_item(new object.shape({
 					properties: {
 									threshold: this.properties.threshold,
 									restitution: this.properties.restitution,
@@ -132,5 +135,8 @@ Tools.pen = {
 			}
 		}
 		ctx.stroke();
+	},
+	update: function(){
+		
 	}
 };
