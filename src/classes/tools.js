@@ -156,7 +156,6 @@ Tools.transform = {
 	origin: {x: null, y: null},
 	size: {width: null, height: null},
 	scale: {x: 1, y: 1},
-	pI : {x: null, y: null},//pointer initial position
 	shape: function () { return Objects_list.selected; },
 	properties: {
 		width: '1',
