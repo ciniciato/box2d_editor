@@ -13,8 +13,9 @@ Array.prototype.removeDuplicates = function (){
   return temp;
 }
 
-Array.prototype.last = function(){
-    return this[this.length - 1];
+Array.prototype.last = function(pos){
+    var ind = (pos == undefined) ? 1 : (1 + Math.abs(pos));
+    return this[this.length - ind];
 }; 
 
 utils.getSignal = function(_value){

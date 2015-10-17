@@ -38,6 +38,7 @@ var Tools = {
 	}
 };
 
+//Apply zoom to anchor points
 Tools.pen = {
 	that: Tools,
 	cursor: 'none',
@@ -73,16 +74,58 @@ Tools.pen = {
 								}
 					})).id);
 			this.shape().object.add_point({x: Pointer.rX, y: Pointer.rY});
-		} else if (this.shape().object.type == 'shape'){
-			this.shape().object.add_point({x: Pointer.rX, y: Pointer.rY});
-			var points = this.shape().object.cpoints;
-			//Select bezier anchors to selected points, so you can move then
-			this.selectedpoints = [];
-			this.selectedpoints.push(points[points.length - 1]);
-			this.selectedpoints.push(points[points.length - 2]);
+		} else if (this.shape().object.type == 'shape'){ 
+			//if intersected select bezier point
+			var newpos = (!Keys.list[Keys.CTRL]) ? false : this.points_intersected(true, 'cpoint');
+			if (newpos != false){
+				this.selectedpoints = newpos;
+			} else 	{
+				this.shape().object.add_point({x: Pointer.rX, y: Pointer.rY});
+				var points = this.shape().object.cpoints;
+				//Select bezier anchors to selected points, so you can move then
+				this.selectedpoints = [];
+				this.selectedpoints.push(points.last());
+				this.selectedpoints.push(points.last(1));
+			}
 		}
 	},
+	points_intersected: function(_array, _type){//type = all/cpoint/point
+		_array = (_array != undefined) ? _array : false;
+		_type = (_type != undefined) ? _type : 'all';
+		var res = [];
+		if (this.shape() != null){
+			for (var i = 0; i < this.shape().object.cpoints.length; i++){
+				for (var k = 0; k < this.selectedpoints.length &&
+					this.shape().object.cpoints[i] != this.selectedpoints[k]; k++){
+				}
+				if (k == this.selectedpoints.length){ 
+					if (_type != 'cpoint' && this.shape().object.points[i] != undefined &&
+						Pointer.intersect({position: this.shape().object.points[i], size: {width: .05, height: .05}})){
+						if (_array)
+							res.push(this.shape().object.points[i]);
+						else
+							return this.shape().object.points[i];
+					} else if (Pointer.intersect({position: this.shape().object.cpoints[i], size: {width: .05, height: .05}})){
+						if (_array)
+							res.push(this.shape().object.cpoints[i]);
+						else
+							return this.shape().object.cpoints[i];
+					} 
+				}
+			}		
+		}
+		if (res.length > 0)
+			return res;
+		else
+			return false;
+	},
 	onmove: function(){
+		//Magnetic points
+		if (newpos = this.points_intersected()){
+			Pointer.rX = newpos.x;
+			Pointer.rY = newpos.y;
+		}
+		//REVIEW THIS!!!
 		if (this.selectedpoints.length > 0){
 			if (this.selectedpoints.length == 2 && this.selectedpoints[0].point != undefined){
 				this.selectedpoints[0].x = Pointer.rX; 
@@ -92,11 +135,9 @@ Tools.pen = {
 				this.selectedpoints[1].x = this.selectedpoints[0].point.x - dx; 
 				this.selectedpoints[1].y = this.selectedpoints[0].point.y - dy;
 			} else {
-				this.selectedpoints[0].x = debugDraw.Pointer.rX; 
-				this.selectedpoints[0].y = debugDraw.Pointer.rY;
-				for (var i = 1; i < this.selectedpoints.length; i++){
-					this.selectedpoints[i].x = this.selectedpoints[i].old.x - (Pointer.DragX - Pointer.rX); 
-					this.selectedpoints[i].y = this.selectedpoints[i].old.y - (Pointer.DragY - Pointer.rY);
+				for (var i = 0; i < this.selectedpoints.length; i++){
+					this.selectedpoints[i].x = Pointer.rX; 
+					this.selectedpoints[i].y = Pointer.rY;
 				}
 			}
 			this.shape().object.update();
@@ -106,8 +147,16 @@ Tools.pen = {
 		this.selectedpoints = [];
 	},
 	onkeydown: function(e){
+		//Review preventdefault, only allowed in inputs
+		if (e.keyCode == Keys.BACKSPACE){
+			var obj = this.shape().object;
+			obj.points.splice(obj.points.length - 1, 1);
+			obj.cpoints.splice(obj.cpoints.length - 1, 1);
+			obj.cpoints.splice(obj.cpoints.length - 1, 1);
+			obj.update();
+		}
 	},
-	onkeyup: function(key){
+	onkeyup: function(e){
 	},
 	render: function(_args){
 		var ctx = _args.ctx, repos = _args.repos;
@@ -144,18 +193,18 @@ Tools.pen = {
 		ctx.stroke();
 	},
 	update: function(){
-		
 	}
 };
 
+//Change center resize
 Tools.transform = {
 	cursor: 'default',
 	option: 'default',
-	type: 'transform',//required for properties panel
+	type  : 'transform',//required for properties panel
 	points: {nw: null, n: null, ne: null, e: null, se: null, s: null,  sw: null, w: null},//anchors points to resize
 	origin: {x: null, y: null},
-	size: {width: null, height: null},
-	scale: {x: 1, y: 1},
+	size  : {width: null, height: null},
+	scale : {x: 1, y: 1},
 	shape: function () { return Objects_list.selected; },
 	properties: {
 		width: '1',
