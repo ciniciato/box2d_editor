@@ -194,8 +194,8 @@ var physic_object = {
 		    			this.rpoints.push(utils.bezierInterpolation(t, this.cpoints[k].point, this.cpoints[k], 
 		    							this.cpoints[k+1], this.cpoints[k+1].point));
 				    	//remove duplicate points and nearer points, convert to minimun unity(0.1 cm) 
-				    	this.rpoints.last().x = utils.round(this.rpoints.last().x, 100);
-				    	this.rpoints.last().y = utils.round(this.rpoints.last().y, 100);
+				    	//this.rpoints.last().x = utils.round(this.rpoints.last().x, 100);
+				    	//this.rpoints.last().y = utils.round(this.rpoints.last().y, 100);
 		    			setaabb(this.rpoints.last());
 						this.rpoints = this.rpoints.removeDuplicates();
 		    		}
@@ -250,7 +250,10 @@ var physic_object = {
 		this.render = function(_args){
 			var ctx = _args.ctx, repos = _args.repos;
 			ctx.lineWidth = 2;
-			ctx.fillStyle = 'rgba(255, 198, 0, .7)';
+			if (this.owner.parent.object.properties.type == 'dynamic')
+				ctx.fillStyle = 'rgba(255, 198, 0, .7)';
+			else
+				ctx.fillStyle = 'rgba(0, 198, 255, .7)';
 			ctx.strokeStyle = 'rgba(0, 0, 0, .7)';
 			ctx.beginPath();
 			//Render shape countor

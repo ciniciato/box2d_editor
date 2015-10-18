@@ -11,9 +11,9 @@ Control.update = function(){
 }
 
 Control.render = function(){
-	var repos = (World.scale * Camera.scale);
 	Camera.update();
 	Camera.clear();	
+	var repos = (World.scale * Camera.scale);
 	Grid.render({ctx: Camera.ctx, repos: repos});
 	Objects_list.render({ctx: Camera.ctx, repos: repos});
 	Tools.render({ctx: Camera.ctx, repos: repos});
@@ -37,7 +37,8 @@ Grid.render = function(_args){
 			reset = (Camera.position[pos] - Camera.size[size]) 
 					- (Camera.position[pos] - Camera.size[size]) % step;
 		strongerline = function(i){
-			return (i % (step * that.squaresize) == 0);
+			return false;
+			//return (i % (step * that.squaresize) == 0);
 		}
 		for (var i = reset; i < end; i += step){
 			if (strongerline(i)){

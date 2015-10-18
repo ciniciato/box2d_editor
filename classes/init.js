@@ -4,14 +4,21 @@ var ToolBar = new menu({div: 'toolbar'});
 
 ToolBar.add_item(new group({caption: 'Pen'}));
 ToolBar.last().add_item(new button({caption: 'Pen', 
-									icon: 'img/icon_addanchor.png', 
+									icon: 'assets/img/icon_addanchor.png', 
 								 onclick: function(){ 
 								 			Tools.set('pen')
 								 			Tools_properties.select(Tools.pen); 
 								 		}  
 								 }));
+ToolBar.last().add_item(new button({caption: 'Select', 
+									icon: 'assets/img/icon_selectpoint.png', 
+								 onclick: function(){ 
+								 			Tools.set('transform'); 
+								 			Tools_properties.select(Tools.select); 
+								 		} 
+								 }));
 ToolBar.last().add_item(new button({caption: 'Transform', 
-									icon: 'img/icon_transform.png', 
+									icon: 'assets/img/icon_transform.png', 
 								 onclick: function(){ 
 								 			Tools.set('transform'); 
 								 			Tools_properties.select(Tools.transform); 

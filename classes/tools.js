@@ -1,13 +1,17 @@
 var Tools = {
-	prev: null,
+	_prev: null, //previous tool
 	selected: null,
 	set: function(id){
 		if (this.selected !== this[id]){
+			this._prev = this.selected;
 			this.selected = this[id];
-			this.prev = id;
-			Camera.canvas.style.cursor = this[id].cursor;
 			this.selected.init();
 		}
+	},
+	prev: function(){
+		this.selected = this._prev;
+		if (this.selected != null)
+			this.selected.init();
 	},
 	onclick: function(){
 		if (this.selected != undefined)
@@ -22,6 +26,8 @@ var Tools = {
 			this.selected.onup();
 	},
 	onkeydown: function(e){
+		if (e.keyCode == Keys.SPACE)
+			this.set('scroll');
 		if (this.selected != undefined)
 			this.selected.onkeydown(e);
 	},
@@ -38,10 +44,9 @@ var Tools = {
 	}
 };
 
-//Apply zoom to anchor points
+//Apply zoom to anchor points, see photoshop tool and remake
 Tools.pen = {
 	that: Tools,
-	cursor: 'none',
 	type: 'pen',//required for properties panel
 	selectedpoints: [],
 	shape: function () { return Objects_list.selected; },
@@ -52,6 +57,7 @@ Tools.pen = {
 		density: '1'
 	},
 	init : function(){
+		Pointer.set_cursor('none');
 	},
 	onclick: function(){
 		if (this.shape() == null){
@@ -93,7 +99,7 @@ Tools.pen = {
 		_array = (_array != undefined) ? _array : false;
 		_type = (_type != undefined) ? _type : 'all';
 		var res = [];
-		if (this.shape() != null){
+		if (this.shape() != null && this.shape().object.type == 'shape'){
 			for (var i = 0; i < this.shape().object.cpoints.length; i++){
 				for (var k = 0; k < this.selectedpoints.length &&
 					this.shape().object.cpoints[i] != this.selectedpoints[k]; k++){
@@ -198,7 +204,6 @@ Tools.pen = {
 
 //Change center resize
 Tools.transform = {
-	cursor: 'default',
 	option: 'default',
 	type  : 'transform',//required for properties panel
 	points: {nw: null, n: null, ne: null, e: null, se: null, s: null,  sw: null, w: null},//anchors points to resize
@@ -218,6 +223,7 @@ Tools.transform = {
 		};
 	},
 	init : function(){
+		Pointer.set_cursor('default');
 	},
 	onclick: function(){
 	},
@@ -333,6 +339,34 @@ Tools.transform = {
 	}
 }
 
+Tools.scroll = {
+	init : function(){
+		Pointer.set_cursor('grab');
+	},
+	onclick: function(){
+		Pointer.set_cursor('grabbing');
+	},
+	onmove: function(){
+		if (Pointer.isDown && Pointer.hasMoved){
+			Camera.move({x: Pointer.rX - Pointer.DragX, y: Pointer.rY - Pointer.DragY});	
+			Pointer.DragX = Pointer.rX;
+			Pointer.DragY = Pointer.rY;
+		}
+	},
+	onup: function(){
+		Pointer.set_cursor('grab');
+	},
+	onkeydown: function(e){
+	},
+	onkeyup: function(e){
+		if (e.keyCode == Keys.SPACE)
+			Tools.prev();
+	},
+	render: function(_args){	
+	},
+	update: function(){
+	}
+}
 /*
 
 Tools.transform = {

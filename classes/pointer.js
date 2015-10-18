@@ -48,8 +48,13 @@ var Pointer = {
 			this.X  = e.pageX;
 			this.Y  = e.pageY - (window.innerHeight - Camera.canvas.height);
 		}
-		this.rX = Camera.position.x - Camera.size.width  + this.X / (World.scale * Camera.scale),
+		//this.rX = Camera.position.x - Camera.size.width  + this.X / (World.scale * Camera.scale),
+		//this.rY = Camera.position.y - Camera.size.height + this.Y / (World.scale * Camera.scale);
+    	//ortogonal
+    	this.rX = Camera.position.x - Camera.size.width  + this.X / (World.scale * Camera.scale);
+    	this.rX =this.rX - this.rX%(Grid.cellsize/Math.round(Camera.scale));
 		this.rY = Camera.position.y - Camera.size.height + this.Y / (World.scale * Camera.scale);
+    	this.rY =this.rY - this.rY%(Grid.cellsize/Math.round(Camera.scale));
     	
     	this.hasMoved = (this.rX != this.DragX || this.rY != this.DragY);
 		
@@ -93,14 +98,14 @@ var Pointer = {
 		}, false);
 		if (window.addEventListener) this.elem.addEventListener('DOMMouseScroll', function(e) { 
 			self.wheelDelta = e.detail * 10;
-	        var value =  Camera.scale - e.detail/30;
+	        var value =  Camera.follow.scale - e.detail/30;
 	        if (value >= .5)
 		        Camera.zoom(value);
 			return false; 
 		}, false); 
 		this.elem.onmousewheel = function () { 
 			self.wheelDelta = -event.wheelDelta * .25;
-	        var value =  Camera.scale - self.wheelDelta/30;
+	        var value =  Camera.follow.scale - self.wheelDelta/30;
 	        if (value >= .5)
 		        Camera.zoom(value);
 			return false; 

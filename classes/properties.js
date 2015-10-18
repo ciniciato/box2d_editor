@@ -66,7 +66,7 @@ function field(_args){
 				'.change({field: &quot;'+this.caption+'&quot;})" onchange="'+tree.varname+'.change({field: &quot;'+
 					this.caption+'&quot;, update: true})" type="text"></td>';
 		else if (this.type == 'select'){
-			var str = '<'+tag+' class="input"><select class="content"  onchange="'+tree.varname+'.change(&quot;'+this.caption+'&quot;)">';
+			var str = '<'+tag+' class="input"><select class="content"  onchange="'+tree.varname+'.change({field: &quot;'+this.caption+'&quot;, update: true})">';
 			for (var i = 0; i < this.options.length; i++){
 				str += '<option value="'+this.options[i]+'">'+this.options[i]+'</option>';	
 			}
@@ -113,6 +113,7 @@ function properties_container(_args){
 		}
 		obj.properties[_args.field] = (i < this.selected.children.length) ? 
 				this.selected.children[i].elem.content.value : null;
+				console.log(_args);
 		if (_args.update) obj.update();
 		if (_args.field == 'name')
 			Objects_list.selected.changetitle(this.selected.children[i].elem.content.value);
