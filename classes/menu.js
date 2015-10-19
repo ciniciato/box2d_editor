@@ -13,6 +13,7 @@ function button(_args){
 			this.elem.innerHTML = '<i class="material-icons btn_view">'+this.icon+'</i>';
 		else
 			this.elem.innerHTML = '<img src="' + this.icon + '">';
+		this.elem.innerHTML += '<span class="tooltip">'+ this.caption +'</span>';
 		this.elem.content = this.elem;
 		this.elem.onclick = this.onclick;
 	};
@@ -41,7 +42,7 @@ function group(_args){
 	this.init = function(){
 		var node = document.createElement("div");
 		this.elem = this.parent.elem.appendChild(node); 
-		this.elem.innerHTML = '<div class="content"></div><span class="title">'+ this.caption +'<span>';
+		this.elem.innerHTML = '<div class="content"></div>';
 		this.elem.className = 'group';
 		this.elem.content = this.elem.getElementsByClassName('content')[0];
 	};

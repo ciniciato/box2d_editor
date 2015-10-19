@@ -123,7 +123,7 @@ var Objects_list = {
 			return r;
 		}
 		this.selected = find(id, this);
-		Objects_properties.select(this.selected.object)
+		Objects_properties.select(this.selected.object);
 		this.selected.elem.className += ' selected';
 	},
 	render: function(_args){

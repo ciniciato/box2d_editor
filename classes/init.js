@@ -1,10 +1,8 @@
-Control.init();
-
 var ToolBar = new menu({div: 'toolbar'});
 
 ToolBar.add_item(new group({caption: 'Pen'}));
 ToolBar.last().add_item(new button({caption: 'Pen', 
-									icon: 'assets/img/icon_addanchor.png', 
+									icon: 'assets/img/icon_pen.png', 
 								 onclick: function(){ 
 								 			Tools.set('pen')
 								 			Tools_properties.select(Tools.pen); 
@@ -32,11 +30,12 @@ ToolBar.last().add_item(new button({caption: 'Circle',
 ToolBar.last().add_item(new button({caption: 'Polygon', 
 									icon: 'img/icon_poly.png', 
 								 onclick: function(){alert();} }));
-ToolBar.add_item(new group({caption: 'Tools'}));
-ToolBar.last().add_item(new button({caption: 'Teste', 
-									icon: 'play_arrow', 
-								 onclick: function(){alert();} }));
 */
+ToolBar.add_item(new group({caption: 'Tools'}));
+ToolBar.last().add_item(new button({caption: 'Run',
+									icon: 'play_arrow', 
+								 onclick: function(){ debugDraw.run();} }));
+
 var Properties_menu = new menu({div: 'properties_menu'});
 Properties_menu.add_item(new button({caption: 'New Body', 
 									size: 'small',
@@ -91,7 +90,7 @@ Objects_properties.add_item(new property_group({caption: 'body'}));
 Objects_properties.last().add_item(new field({caption: 'name', type: 'text'}));
 Objects_properties.last().add_item(new field({caption: 'type', 
 										type: 'select', 
-										options: ['dynamic', 'fixed']}));
+										options: ['dynamic', 'static']}));
 Objects_properties.last().add_item(new field({caption: 'fixedRotation', 
 										type: 'select', 
 										options: ['false', 'true']}));
@@ -111,3 +110,5 @@ Objects_properties.last().add_item(new field({caption: 'name', type: 'text'}));
 Objects_properties.last().add_item(new field({caption: 'type', type: 'text'}));
 Objects_properties.last().add_item(new field({caption: 'bodyA', type: 'text'}));
 Objects_properties.last().add_item(new field({caption: 'bodyB', type: 'text'}));
+
+Control.init();

@@ -113,7 +113,6 @@ function properties_container(_args){
 		}
 		obj.properties[_args.field] = (i < this.selected.children.length) ? 
 				this.selected.children[i].elem.content.value : null;
-				console.log(_args);
 		if (_args.update) obj.update();
 		if (_args.field == 'name')
 			Objects_list.selected.changetitle(this.selected.children[i].elem.content.value);
@@ -133,5 +132,11 @@ function properties_container(_args){
 			this.selected.elem.style.display = 'block';
 		} else
 			this.selected = null;
+	};
+	this.update = function(){
+		var obj = (this.object == null) ? this.p_object() : this.object;
+		if (this.selected != null && obj != null)
+			for (i = 0; i < this.selected.children.length; i++)
+				this.selected.children[i].elem.content.value = obj.properties[this.selected.children[i].caption];
 	};
 }

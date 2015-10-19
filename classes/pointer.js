@@ -35,8 +35,8 @@ var Pointer = {
 		if (!this.isDown) {
 			this.isDown = true;
 			this.evt = e;
-			this.X  = e.pageX;
-			this.Y  = e.pageY - (window.innerHeight - Camera.canvas.height);
+			this.X  = e.pageX - Camera.canvas.position.x;
+			this.Y  = e.pageY - Camera.canvas.position.y;
 			this.DragX = this.rX;
 			this.DragY = this.rY;
 
@@ -45,17 +45,18 @@ var Pointer = {
 	},
 	pointerMove : function(e) {
 		if (e != undefined){
-			this.X  = e.pageX;
-			this.Y  = e.pageY - (window.innerHeight - Camera.canvas.height);
+			this.X  = e.pageX - Camera.canvas.position.x;
+			this.Y  = e.pageY - Camera.canvas.position.y;
 		}
-		//this.rX = Camera.position.x - Camera.size.width  + this.X / (World.scale * Camera.scale),
-		//this.rY = Camera.position.y - Camera.size.height + this.Y / (World.scale * Camera.scale);
+		this.rX = Camera.position.x - Camera.size.width  + this.X / (World.scale * Camera.scale),
+		this.rY = Camera.position.y - Camera.size.height + this.Y / (World.scale * Camera.scale);
     	//ortogonal
+    	/*
     	this.rX = Camera.position.x - Camera.size.width  + this.X / (World.scale * Camera.scale);
     	this.rX =this.rX - this.rX%(Grid.cellsize/Math.round(Camera.scale));
 		this.rY = Camera.position.y - Camera.size.height + this.Y / (World.scale * Camera.scale);
     	this.rY =this.rY - this.rY%(Grid.cellsize/Math.round(Camera.scale));
-    	
+    	*/
     	this.hasMoved = (this.rX != this.DragX || this.rY != this.DragY);
 		
 		Tools.onmove();		

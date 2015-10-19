@@ -119,7 +119,7 @@ var physic_object = {
 				friction: '1',
 				restitution: '0',
 				threshold: '0.05',
-				fixtures: ''
+				fixtures: '0'
 			}; 
 		else
 			this.properties = _args.properties;
@@ -190,25 +190,31 @@ var physic_object = {
 		    	this.rpoints.push({x: this.points[Math.floor(k/2)].x, y: this.points[Math.floor(k/2)].y});
 		    	setaabb(this.rpoints.last());
 				if (this.cpoints[k+1] != undefined)
-		    		for (var t = 0.0; t <= 1.00001; t += threshold) {
+		    		for (var t = 0.0; t <= 1 - threshold; t += threshold) {
 		    			this.rpoints.push(utils.bezierInterpolation(t, this.cpoints[k].point, this.cpoints[k], 
 		    							this.cpoints[k+1], this.cpoints[k+1].point));
 				    	//remove duplicate points and nearer points, convert to minimun unity(0.1 cm) 
-				    	//this.rpoints.last().x = utils.round(this.rpoints.last().x, 100);
-				    	//this.rpoints.last().y = utils.round(this.rpoints.last().y, 100);
 		    			setaabb(this.rpoints.last());
-						this.rpoints = this.rpoints.removeDuplicates();
 		    		}
 	    	};
+	    	this.rpoints = this.rpoints.removeDuplicates();
 	    	//triangulation
 	    	this.isComplex = false;
-			if (utils.clockwise(this.points) === CLOCKWISE)
+			if (utils.isClockwise(this.rpoints) == CLOCKWISE)
 				this.rpoints.reverse();
-			if (utils.convex(this.rpoints) === CONCAVE){
+			if (utils.isConvex(this.rpoints) == CONCAVE){
 				this.fpoints = utils.process(this.rpoints);
 				this.isComplex = (this.fpoints == null) ? null : true;
 				if (this.fpoints == null) this.fpoints = [];
+				if (parseFloat(this.properties.fixtures) != Math.round(this.fpoints.length/3)){
+					this.properties.fixtures = Math.round(this.fpoints.length/3);
+					Objects_properties.update();
+				}
 			} else {
+				if (parseFloat(this.properties.fixtures) != 1){
+					this.properties.fixtures = 1;
+					Objects_properties.update();
+				}
 				this.fpoints = this.rpoints;
 			}		
 			//remove 'if', it must have owner
@@ -256,11 +262,10 @@ var physic_object = {
 				ctx.fillStyle = 'rgba(0, 198, 255, .7)';
 			ctx.strokeStyle = 'rgba(0, 0, 0, .7)';
 			ctx.beginPath();
-			//Render shape countor
-			for (var k = 0; k < this.rpoints.length; k++){
+			//Render shape contour
+			for (var k = 0; k < this.rpoints.length; k++)
 				ctx.lineTo(this.rpoints[k].x * repos,
-			    			this.rpoints[k].y * repos)
-			}
+			    			this.rpoints[k].y * repos);
 			for (var k = 0; k < this.fpoints.length && this.isComplex; k += 3)
 				if (this.fpoints[k+2]!=undefined){
 					ctx.moveTo(this.fpoints[k].x * repos,
@@ -286,12 +291,10 @@ var physic_object = {
 				threshold: this.properties.threshold,
 				fixtures: this.properties.fixtures
 			}; 
-			for (var i = 0; i < this.points.length; i++){
-				copy.points.push({x: this.points[i].x, y: this.points[i].y})
-			}
-			for (var i = 0; i < this.cpoints.length; i++){
+			for (var i = 0; i < this.points.length; i++)
+				copy.points.push({x: this.points[i].x, y: this.points[i].y});
+			for (var i = 0; i < this.cpoints.length; i++)
 				copy.cpoints.push({x: this.cpoints[i].x, y: this.cpoints[i].y, point: copy.points[Math.floor(i/2)]})
-			}
 			copy.update();
 			return copy;
 		};

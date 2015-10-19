@@ -25,6 +25,8 @@ Camera.resize = function(){
 	this.canvas.height = this.canvas.container.offsetHeight;
 	this.canvas.style.display = 'block';
 	this.set();
+	this.canvas.position = {x: Camera.canvas.getBoundingClientRect().left,
+							y: Camera.canvas.getBoundingClientRect().top};
 }
 
 window.onresize = function(event) {
