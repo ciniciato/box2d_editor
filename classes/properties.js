@@ -61,10 +61,14 @@ function field(_args){
 						: document.createElement('div');
 		this.elem = this.parent.elem.content.appendChild(node);
 		this.elem.innerHTML = '<'+tag+' class="caption">'+this.caption+':</'+tag+'>';
-		if (this.type == 'text')
+		if (this.type == 'text')//<input type="checkbox" name="vehicle" value="Bike">
 			this.elem.innerHTML += '<'+tag+' class="input"><input class="content" oninput="'+tree.varname+
 				'.change({field: &quot;'+this.caption+'&quot;})" onchange="'+tree.varname+'.change({field: &quot;'+
 					this.caption+'&quot;, update: true})" type="text"></td>';
+		else if (this.type == 'check'){
+			this.elem.innerHTML += '<'+tag+' class="input"><input class="content" type="checkbox" onchange="'+tree.varname+'.change({field: &quot;'+
+					this.caption+'&quot;, update: true})"></td>';			
+		}
 		else if (this.type == 'select'){
 			var str = '<'+tag+' class="input"><select class="content"  onchange="'+tree.varname+'.change({field: &quot;'+this.caption+'&quot;, update: true})">';
 			for (var i = 0; i < this.options.length; i++){

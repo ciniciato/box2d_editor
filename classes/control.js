@@ -1,4 +1,5 @@
 var Control = {
+	panels: {}
 }
 
 Control.init = function(){
@@ -6,9 +7,33 @@ Control.init = function(){
 	Keys.init();
 	Pointer.init();
 	debugDraw.init();
+	this.adjustPanels();
+
+	this.panels.toolbar    = document.getElementById('toolbar');
+	this.panels.workspace  = document.getElementById('workspace');
+	
+	this.panels.control    = GUI.findChildren({property: 'name', value: 'Control panel'});
+	this.panels.objectList = GUI.findChildren({property: 'name', value: 'Object list'});
+	this.panels.objectList.resize = function(){
+		this.elem.style.display = 'none';
+		this.elem.style.height =  Control.panels.workspace.getBoundingClientRect().height - Control.panels.control.elem.getBoundingClientRect().height +'px';
+		this.elem.style.display = 'block';		
+	}
+
+	this.panels.properties = {}
+	this.panels.properties.body  = GUI.findChildren({property: 'name', value: 'Body properties'});
+	this.panels.properties.shape = GUI.findChildren({property: 'name', value: 'Shape properties'});
 }
 
 Control.update = function(){
+}
+
+Control.adjustPanels = function(){//Automatize this!
+    document.getElementById('workspace').style.display = 'none';
+    document.getElementById('workspace').style.height = document.body.offsetHeight - document.getElementById('toolbar').offsetHeight + 'px';
+    document.getElementById('workspace').style.display = 'block';  
+	object_list.resize();
+	Camera.resize();
 }
 
 Control.render = function(){
@@ -17,7 +42,7 @@ Control.render = function(){
 	var repos = (World.scale * Camera.scale);
 	if (!debugDraw.isRunning){
 		Grid.render({ctx: Camera.ctx, repos: repos});
-		Objects_list.render({ctx: Camera.ctx, repos: repos});
+		object_list.render({ctx: Camera.ctx, repos: repos});
 		Tools.render({ctx: Camera.ctx, repos: repos});
 		Pointer.render({ctx: Camera.ctx, repos: repos});
 	}

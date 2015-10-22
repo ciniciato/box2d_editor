@@ -35,6 +35,13 @@ utils.round = function(val, amount){
   return Math.round(val*amount)/amount;
 }
 
+utils.intersectedLine_point = function(_point, pLineA, pLineB){
+  if (_point == undefined || pLineA == undefined || pLineB == undefined)
+    return false;
+  var m = (pLineB.y - pLineA.y) / (pLineB.x - pLineA.x);
+  return ( utils.round(_point.y - pLineA.y - m * (_point.x - pLineA.x), 1000) == 0);
+}
+
 utils.bezierInterpolation = function(t, a, b, c, d) {
   var t2 = t * t,
       t3 = t2 * t,
@@ -46,7 +53,7 @@ utils.bezierInterpolation = function(t, a, b, c, d) {
            + (3 * b.y + t * (-6 * b.y + b.y * 3 * t)) * t
            + (c.y * 3 - c.y * 3 * t) * t2
            + d.y * t3);
-  return {x: x, y: y};
+  return {x: utils.round(x, 10000), y: utils.round(y, 10000)};
 }
 
 //Triangulation functions

@@ -9,6 +9,7 @@
        url(assets/fonts/MaterialIcons-Regular.woff) format('woff'),
        url(assets/fonts/MaterialIcons-Regular.ttf) format('truetype');
 }
+
 .material-icons {
   font-family: 'Material Icons';
   font-weight: normal;
@@ -35,313 +36,258 @@ html, body {
 	font-family: 'Arial';
 }
 
+
 #workspace{
-	height: calc(100% - 32px);
-	max-height: calc(100% - 32px);
 	overflow: hidden; 
 }
 
 #workspace table{
 	height: 100%;
 	width: 100%;
+	max-height: 100%;
 }
 
 #workspace #td_panel{
 	height: 100%;
+	max-height: 100%;
 	width: 250px;
 	background: #464646;
-	color: #fff;
+	vertical-align: top;
+	
 }
 
 #workspace #td_canvas{
 	height: 100%;
 }
 
-#topbar {
+/**GUI STYLE**/
+.gui_container {
 	background: #535353;
 	color: #fff;
+
+	padding: 0 5px;
+	margin: 0;
+
+
+	display: block;
+	box-sizing: border-box;	
+}
+
+.gui_container.border{
+	box-sizing: border-box;	
+	background: #535353;
 	border: 1px solid #282828;
 	border-top: 1px solid #6a6a6a;
 }
 
-#toolbar {
-	display: inline-block;
+.gui_container.horizontal > *{
+	
 }
 
-.menu {	
-	padding: 2px 0;
-	text-align: center;
-}
-
-.menu div{
-	position: relative;
-	display: inline-block;
-}
-
-.menu .button{
-	position: relative;
-
-	width: 30px;
-	height: 25px;
-	margin: 0 1px;
-	padding:1px 3px;
-	line-height: 18px;
-
-	text-align: center;
-	cursor: pointer;
-	box-sizing: border-box;	
-	border-radius: 2px;
-	border:1px solid #2a2a2a;
-	background: -webkit-linear-gradient(#3f3f3f, #373737);
-	background: -o-linear-gradient(#3f3f3f, #373737);
-	background: -moz-linear-gradient(#3f3f3f, #373737);
-	background: linear-gradient(#3f3f3f, #373737); 
-}
-
-.menu .tooltip{
-	position: absolute;
-	background: rgba(112, 112, 112, .8);
-	font-size: 10px;
-	color: #fff;
-	padding: 5px;
-	border-radius: 2px;
-	display: none;
-	z-index: 10;
-	text-align: center;
-}
-
-.menu .button:hover .tooltip{
+.gui_container.vertical > *{
 	display: block;
 }
 
-.menu .button > *{
-	opacity: 1;
+.gui_button {
+	position: relative;
+	display: inline-block;
+
+	cursor: pointer;
+	text-align: center;
+	cursor: pointer;
+	
+	box-sizing: border-box;	
+	padding: 2px 5px;
+	margin: 0 2px;
+	border:1px solid transparent;
+
+
+	max-height: 30px;
+	max-width: 30px;
+	height: 30px;
+	width: 30px;
+
+	border-radius: 2px;
 }
 
-.menu .button_default i{
+.gui_button img{
+	margin: 0;
+	max-height: 20px;
+	max-width: 20px;
+	position: relative;
+	top: 50%;
+	transform: translateY(-50%);;
 }
 
-.menu .button_small{
-	width: 25px;
-	height: 20px;
-	margin: 0 1px;
-	padding:0;
+.gui_button i {
+	display: inline-block;
+	font-size: 18px;
+	line-height: 22px;
 }
 
-.menu .button_small i{
-	font-size: 15px;
-	line-height: 18px;
-}
-
-.menu .button:hover{
+.gui_button:hover {
 	border:1px solid #2a2a2a;
+
 	background: -webkit-linear-gradient(#757575, #626262);
 	background: -o-linear-gradient(#757575, #626262);
 	background: -moz-linear-gradient(#757575, #626262);
 	background: linear-gradient(#757575, #626262); 
 }
 
-.menu .group{
+.gui_button.selected{
+	border:1px solid #2a2a2a;
+
+	background: -webkit-linear-gradient(#3f3f3f, #373737);
+	background: -o-linear-gradient(#3f3f3f, #373737);
+	background: -moz-linear-gradient(#3f3f3f, #373737);
+	background: linear-gradient(#3f3f3f, #373737); 
 }
 
-.menu .group .content{
-	padding: 0 5px;
-	border-right: 1px solid #383838;
-} 
-
-.menu .group .title{
-	display: block;
-	text-align: center;
-	background: rgba(0, 0, 0, .2);
-	line-height: 20px;
-}
-
-#td_panel h3{
-	font-weight: normal;
-	font-size: 12px;
-	padding: 0;
-	margin: 0;
-	position: relative;
-	text-indent: 15px;
-	line-height: 30px;
-	height: 30px;
-	box-sizing: border-box;	
-	border: 1px solid #282828;
-	border-top: 1px solid #707070;
-}
-
-#td_panel h3:before{
+.gui_tooltip{
 	position: absolute;
-	background: #d91111;
-	content: '';
+	display: none;
+	z-index: 10;
+	top: 100%;
 	left: 0;
-	display: inline-block;
-	height: 100%;
-	width: 3px;
-}
+	margin-top: 2px;
 
-#list_objects{
-	overflow-y: scroll; 
-	height: calc(50% - 30px);
-	width: 100%;
-	padding: 0;
-	margin: 0;
-	box-sizing: border-box;	
-	border: 1px solid rgba(0, 0, 0, .5);
-	border-right: 0;
-}
+	color: #fff;
+	background: rgba(112, 112, 112, .8);
 
-#list_objects li {
-	line-height: 25px;
-	text-indent: 10px;
 	font-size: 10px;
+	text-align: center;
+
+	padding: 5px;
+	border-radius: 2px;
 }
 
-#list_objects>li {
-	border:1px solid #333;
-}
-
-#list_objects .wrap{
-	position: relative;
-	border-top:1px solid #333;
-	background: #535353;
-	display: block;
-	height: auto;
-}
-
-#list_objects .wrap .btn_view{
-	float: left;
-	box-sizing: border-box;	
-	font-size: 14px;
-	margin: 0;
-	padding: 0;
-	text-indent: 0;
+.gui_button:hover .gui_tooltip{
 	display: inline-block;
-	line-height: 25px;
-	margin-left: 10px;
 }
 
-#list_objects .caption {
-	border-left: 1px solid #333;
-	position: relative;
-	cursor: pointer;
-	box-sizing: border-box;	
+.gui_field{
+	margin-right: 10px;
+}
+
+.gui_field label{
+	padding: 0 5px;
+	font-size: 11px;
+}
+
+.gui_field .input{
+	border-bottom: 1px solid #696969;	
 	display: inline-block;
-	width: 85%;
 }
 
-#list_objects .caption i {
-	opacity: .3;
-	position: absolute;
-	right: 0;
-}
+.gui_field input[type="text"]{
+    font-size: 10px;
+    line-height: 15px;
+	text-align: center;
+	color: #fff;
 
-#list_objects .caption:hover, #list_objects .selected > .wrap > .caption{
-	background: #6d7d92
-}
-
-#list_objects ul {
-	list-style: none;
-	padding: 0 0 0 0;
-}
-
-#list_objects ul li{
-}
-
-#list_objects .sub_0{
-	padding-left: 10px;
-}
-
-#list_objects .sub_1{
-	padding-left: 20px;
-}
-
-#list_objects .sub_2{
-	padding-left: 30px;
-}
-
-#tool_properties{
-	display: inline-block;
-	float: right;
-}
-
-.properties_container{
-}
-
-.properties_container_horizontal{
-	padding: 3px 0;
-}
-.properties_container_horizontal > div{
-	position: relative;
- }
-
-.properties_container_horizontal .input{
-	border-bottom: 1px solid #6d6d6d;
-}
-
-.properties_container_vertical{
-	height: calc(50% - 30px);
-	overflow-y: scroll; 	
-	border: 1px solid rgba(0, 0, 0, .5);
-	border-right: 0;	
-}
-
-.properties_container_vertical table{
-	width: 100%;
-    border-spacing: 0;
-    font-size: 11px;
-}
-
-.properties_container table tr td{
-	line-height: 30px;
-	border-bottom: 1px solid rgba(0, 0, 0, .3);
-}
-
-.properties_container table tr td.caption{
-	padding: 0 5px 0 10px;
-}
-
-.properties_container table tr td.field{
-	padding: 0 5px 0 0;
-}
-
-.properties_container input, .properties_container select{
-    font-size: 11px;
-	box-sizing: border-box;	
 	border: 0;
 	padding: 0;
 	margin: 0;
+
+	box-sizing: border-box;	
 	border:1px solid rgba(0, 0, 0, .3);
-	color: #fff;
 	padding: 2px 5px;
-	text-align: center;
+
 	background: -webkit-linear-gradient(#373737, #3a3a3a);
 	background: -o-linear-gradient(#373737, #3a3a3a);
 	background: -moz-linear-gradient(#373737, #3a3a3a);
 	background: linear-gradient(#373737, #3a3a3a); 
-}
 
-.properties_container_vertical .input{
-	padding: 0 10px;
-}
-
-.properties_container_vertical .input *{
-	width: 100%;
-}
-
-.properties_container_horizontal .input *{
 	width: 50px;
 }
 
-.properties_container_horizontal .field{
-	display: inline-block;
-	margin-right: 15px;
+.gui_field input[type="checkbox"] {
+	display:none;
 }
 
-.properties_container_horizontal .field .caption{
-	padding: 0 10px;
+.gui_field input[type="checkbox"] + label span {
+    display:inline-block;
+    width:19px;
+    height:19px;
+    margin:-1px 4px 0 0;
+    vertical-align:middle;
+    background:url(assets/img/check_radio_sheet.png) left top no-repeat;
+    cursor:pointer;
 }
 
-.properties_container_horizontal .field div{
+.gui_field input[type="checkbox"]:checked + label span {
+    background:url(assets/img/check_radio_sheet.png) -19px top no-repeat;
+}
+
+.vertical_centered {
+	position: relative;
+	top: 50%;
+	transform: translateY(-50%);
+}
+
+.td_0, .td_1 {
 	display: inline-block;
+	box-sizing: border-box;	
+}
+
+.gui_list{
+	padding: 0;
+}
+
+
+.panel_container{
+	background: red;
+	padding: 0;
+}
+
+.object_list{
+	background: #464646!important;
+	overflow-y: scroll;
+}
+
+.folder_wrap{
+	background: blue;
+	padding: 0;
+}
+
+.folder_wrap .gui_container{
+	padding: 0;
+}
+
+.folder_wrap .gui_button{
+	margin: 0;
+	background: #535353;
+	width: auto;
+	max-width: none;
+	height: auto;
+	max-height: none;
+	border-radius: 0;
+	border: 1px solid #333;
+	border-top: none;
+}
+
+.body_item, .shape_item {
+	background: red;
+	padding: 0;
+}
+
+.folder_wrap .btn_view{
+	width: 30px;
+	height: 30px;
+}
+
+.folder_wrap .btn_body, .folder_wrap .btn_shape{
+	border-left: none;
+	width: calc(100% - 30px);
+	text-align: left;
+	position: relative;
+	height: 30px;
+}
+
+.btn_shape{
+	text-indent: 5px;
+}
+
+.btn_body.selected, .btn_shape.selected{
+	background: #6d7d92;
 }

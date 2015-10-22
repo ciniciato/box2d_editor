@@ -188,12 +188,17 @@ var physic_object = {
 			//bezier interpolation
 			for (var k = 1; k < this.cpoints.length; k += 2){
 		    	this.rpoints.push({x: this.points[Math.floor(k/2)].x, y: this.points[Math.floor(k/2)].y});
+		    	if (utils.intersectedLine_point(this.rpoints.last(1), this.rpoints.last(), this.rpoints.last(2)))
+		    		this.rpoints.splice(this.rpoints.length-2, 1);
 		    	setaabb(this.rpoints.last());
 				if (this.cpoints[k+1] != undefined)
-		    		for (var t = 0.0; t <= 1 - threshold; t += threshold) {
+		    		for (var t = threshold; t <= 1 - threshold; t += threshold) {
 		    			this.rpoints.push(utils.bezierInterpolation(t, this.cpoints[k].point, this.cpoints[k], 
 		    							this.cpoints[k+1], this.cpoints[k+1].point));
-				    	//remove duplicate points and nearer points, convert to minimun unity(0.1 cm) 
+				    	//remove duplicate points and nearer points, convert to minimun unity(0.1 cm)
+				    	if (utils.intersectedLine_point(this.rpoints.last(1), this.rpoints.last(), this.rpoints.last(2)))
+				    		this.rpoints.splice(this.rpoints.length-2, 1);
+
 		    			setaabb(this.rpoints.last());
 		    		}
 	    	};
@@ -208,18 +213,18 @@ var physic_object = {
 				if (this.fpoints == null) this.fpoints = [];
 				if (parseFloat(this.properties.fixtures) != Math.round(this.fpoints.length/3)){
 					this.properties.fixtures = Math.round(this.fpoints.length/3);
-					Objects_properties.update();
+					shape_properties.findChildren({property: 'name', value: 'fixtures'}).load();//update GUI field
 				}
 			} else {
 				if (parseFloat(this.properties.fixtures) != 1){
 					this.properties.fixtures = 1;
-					Objects_properties.update();
+					shape_properties.findChildren({property: 'name', value: 'fixtures'}).load();//update GUI field
 				}
 				this.fpoints = this.rpoints;
 			}		
 			//remove 'if', it must have owner
-			if (this.owner != undefined)
-				this.owner.parent.object.update();				 
+		//	if (this.owner != undefined)
+		//		this.owner.parent.object.update();				 
 		};
 
 
@@ -256,9 +261,9 @@ var physic_object = {
 		this.render = function(_args){
 			var ctx = _args.ctx, repos = _args.repos;
 			ctx.lineWidth = 2;
-			if (this.owner.parent.object.properties.type == 'dynamic')
-				ctx.fillStyle = 'rgba(255, 198, 0, .7)';
-			else
+		//	if (this.owner.parent.object.properties.type == 'dynamic')
+		//		ctx.fillStyle = 'rgba(255, 198, 0, .7)';
+		//	else
 				ctx.fillStyle = 'rgba(0, 198, 255, .7)';
 			ctx.strokeStyle = 'rgba(0, 0, 0, .7)';
 			ctx.beginPath();

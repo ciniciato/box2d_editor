@@ -1,41 +1,5 @@
-var ToolBar = new menu({div: 'toolbar'});
 
-ToolBar.add_item(new group({caption: 'Pen'}));
-ToolBar.last().add_item(new button({caption: 'Pen', 
-									icon: 'assets/img/icon_pen.png', 
-								 onclick: function(){ 
-								 			Tools.set('pen')
-								 			Tools_properties.select(Tools.pen); 
-								 		}  
-								 }));
-ToolBar.last().add_item(new button({caption: 'Select', 
-									icon: 'assets/img/icon_selectpoint.png', 
-								 onclick: function(){ 
-								 			Tools.set('transform'); 
-								 			Tools_properties.select(Tools.select); 
-								 		} 
-								 }));
-ToolBar.last().add_item(new button({caption: 'Transform', 
-									icon: 'assets/img/icon_transform.png', 
-								 onclick: function(){ 
-								 			Tools.set('transform'); 
-								 			Tools_properties.select(Tools.transform); 
-								 		} 
-								 }));
 /*
-ToolBar.add_item(new group({caption: 'Shapes'}));
-ToolBar.last().add_item(new button({caption: 'Circle', 
-									icon: 'img/icon_circle.png', 
-								 onclick: function(){alert();} }));
-ToolBar.last().add_item(new button({caption: 'Polygon', 
-									icon: 'img/icon_poly.png', 
-								 onclick: function(){alert();} }));
-*/
-ToolBar.add_item(new group({caption: 'Tools'}));
-ToolBar.last().add_item(new button({caption: 'Run',
-									icon: 'play_arrow', 
-								 onclick: function(){ debugDraw.run();} }));
-
 var Properties_menu = new menu({div: 'properties_menu'});
 Properties_menu.add_item(new button({caption: 'New Body', 
 									size: 'small',
@@ -65,23 +29,8 @@ Properties_menu.add_item(new button({caption: 'Paste',
 								 			Objects_list.paste();
 								 		}  
 								 }));
-
-var Tools_properties = new properties_container({	id: 'tool_properties', 
-													orientation: 'horizontal', 
-													varname: 'Tools_properties',
-													p_object: function() { return Tools.selected;} });
-
-Tools_properties.add_item(new property_group({caption: 'pen', orientation: 'horizontal'}));
-Tools_properties.last().add_item(new field({caption: 'density', type: 'text'}));
-Tools_properties.last().add_item(new field({caption: 'friction', type: 'text'}));
-Tools_properties.last().add_item(new field({caption: 'restitution', type: 'text'}));
-Tools_properties.last().add_item(new field({caption: 'threshold', type: 'text'}));
-
-Tools_properties.add_item(new property_group({caption: 'transform', orientation: 'horizontal'}));
-Tools_properties.last().add_item(new field({caption: 'width', type: 'text'}));
-Tools_properties.last().add_item(new field({caption: 'height', type: 'text'}));
-
-
+*/
+/*
 var Objects_properties = new properties_container({	id: 'object_properties', 
 													varname: 'Objects_properties',
 													p_object: function(){ return Objects_list.selected.object;}  })
@@ -110,5 +59,5 @@ Objects_properties.last().add_item(new field({caption: 'name', type: 'text'}));
 Objects_properties.last().add_item(new field({caption: 'type', type: 'text'}));
 Objects_properties.last().add_item(new field({caption: 'bodyA', type: 'text'}));
 Objects_properties.last().add_item(new field({caption: 'bodyB', type: 'text'}));
-
+*/
 Control.init();

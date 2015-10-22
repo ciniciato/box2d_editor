@@ -11,7 +11,8 @@ var Camera = {
 }
 
 Camera.init = function(){
-	this.canvas = document.getElementById('canvas_debug');
+	var node = document.createElement("canvas"); 
+	this.canvas = document.getElementById('td_canvas').appendChild(node);
 	this.canvas.container = document.getElementById('td_canvas');
 	this.ctx = this.canvas.getContext("2d");
 	this.ctx.save();
@@ -30,7 +31,7 @@ Camera.resize = function(){
 }
 
 window.onresize = function(event) {
-    Camera.resize();
+    Control.adjustPanels();
 }; 	
 
 Camera.set = function(a){

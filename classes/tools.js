@@ -49,8 +49,10 @@ Tools.pen = {
 	that: Tools,
 	type: 'pen',//required for properties panel
 	selectedpoints: [],
-	shape: function () { return Objects_list.selected; },
+	shape: function () { return (object_list.selectedChild != undefined) ? object_list.selectedChild.link : null; },
 	properties: {
+		points: true,
+		fixtures: true,
 		threshold: '.05',
 		restitution: '0',
 		friction: '1',
@@ -61,33 +63,33 @@ Tools.pen = {
 	},
 	onclick: function(){
 		if (this.shape() == null){
-			Objects_list.select(Objects_list.add_item(new object.body()).add_item(new object.shape({
-					properties: {
+			object_list.addBody().addShape({
+						properties: {
 									threshold: this.properties.threshold,
 									restitution: this.properties.restitution,
 									friction: this.properties.friction,
 									density: this.properties.density								
 								}
-					})).id);
-			this.shape().object.add_point({x: Pointer.rX, y: Pointer.rY});
-		} else if (this.shape().object.type == 'body'){
-			Objects_list.select(this.shape().add_item(new object.shape({
-					properties: {
+			}).onClick();
+			this.shape().add_point({x: Pointer.rX, y: Pointer.rY});
+		}else if (this.shape().type == 'body'){
+			object_list.selectedChild.addShape({
+						properties: {
 									threshold: this.properties.threshold,
 									restitution: this.properties.restitution,
 									friction: this.properties.friction,
 									density: this.properties.density								
 								}
-					})).id);
-			this.shape().object.add_point({x: Pointer.rX, y: Pointer.rY});
-		} else if (this.shape().object.type == 'shape'){ 
+			}).onClick();
+			this.shape().add_point({x: Pointer.rX, y: Pointer.rY});
+		} else if (this.shape().type == 'shape'){ 
 			//if intersected select bezier point
 			var newpos = (!Keys.list[Keys.CTRL]) ? false : this.points_intersected(true, 'cpoint');
 			if (newpos != false){
 				this.selectedpoints = newpos;
 			} else 	{
-				this.shape().object.add_point({x: Pointer.rX, y: Pointer.rY});
-				var points = this.shape().object.cpoints;
+				this.shape().add_point({x: Pointer.rX, y: Pointer.rY});
+				var points = this.shape().cpoints;
 				//Select bezier anchors to selected points, so you can move then
 				this.selectedpoints = [];
 				this.selectedpoints.push(points.last());
@@ -99,23 +101,23 @@ Tools.pen = {
 		_array = (_array != undefined) ? _array : false;
 		_type = (_type != undefined) ? _type : 'all';
 		var res = [];
-		if (this.shape() != null && this.shape().object.type == 'shape'){
-			for (var i = 0; i < this.shape().object.cpoints.length; i++){
+		if (this.shape() != null && this.shape().type == 'shape'){
+			for (var i = 0; i < this.shape().cpoints.length; i++){
 				for (var k = 0; k < this.selectedpoints.length &&
-					this.shape().object.cpoints[i] != this.selectedpoints[k]; k++){
+					this.shape().cpoints[i] != this.selectedpoints[k]; k++){
 				}
 				if (k == this.selectedpoints.length){ 
-					if (_type != 'cpoint' && this.shape().object.points[i] != undefined &&
-						Pointer.intersect({position: this.shape().object.points[i], size: {width: .05, height: .05}})){
+					if (_type != 'cpoint' && this.shape().points[i] != undefined &&
+						Pointer.intersect({position: this.shape().points[i], size: {width: .05, height: .05}})){
 						if (_array)
-							res.push(this.shape().object.points[i]);
+							res.push(this.shape().points[i]);
 						else
-							return this.shape().object.points[i];
-					} else if (Pointer.intersect({position: this.shape().object.cpoints[i], size: {width: .05, height: .05}})){
+							return this.shape().points[i];
+					} else if (Pointer.intersect({position: this.shape().cpoints[i], size: {width: .05, height: .05}})){
 						if (_array)
-							res.push(this.shape().object.cpoints[i]);
+							res.push(this.shape().cpoints[i]);
 						else
-							return this.shape().object.cpoints[i];
+							return this.shape().cpoints[i];
 					} 
 				}
 			}		
@@ -146,7 +148,7 @@ Tools.pen = {
 					this.selectedpoints[i].y = Pointer.rY;
 				}
 			}
-			this.shape().object.update();
+			this.shape().update();
 		}
 	},
 	onup: function(){
@@ -155,7 +157,7 @@ Tools.pen = {
 	onkeydown: function(e){
 		//Review preventdefault, only allowed in inputs
 		if (e.keyCode == Keys.BACKSPACE){
-			var obj = this.shape().object;
+			var obj = this.shape();
 			obj.points.splice(obj.points.length - 1, 1);
 			obj.cpoints.splice(obj.cpoints.length - 1, 1);
 			obj.cpoints.splice(obj.cpoints.length - 1, 1);
@@ -170,30 +172,30 @@ Tools.pen = {
 		ctx.fillStyle = 'rgba(255, 198, 0, .7)';
 		ctx.strokeStyle = 'rgba(0, 0, 0, .7)';
 		ctx.beginPath();
-		if (this.shape() != null && this.shape().object.type == 'shape'){
+		if (this.shape() != null && this.shape().type == 'shape' && this.properties.points){
 			//bezier curves and points
-			for (var k = 0; k < this.shape().object.cpoints.length; k++){
-				if (this.shape().object.points[k] != undefined){
-					ctx.moveTo(this.shape().object.points[k].x * repos,
-										 this.shape().object.points[k].y * repos);
-					ctx.arc(this.shape().object.points[k].x * repos,
-							 		  this.shape().object.points[k].y * repos, 5, 0, 2*Math.PI);
+			for (var k = 0; k < this.shape().cpoints.length; k++){
+				if (this.shape().points[k] != undefined){
+					ctx.moveTo(this.shape().points[k].x * repos,
+										 this.shape().points[k].y * repos);
+					ctx.arc(this.shape().points[k].x * repos,
+							 		  this.shape().points[k].y * repos, 5, 0, 2*Math.PI);
 				}
-				ctx.moveTo(this.shape().object.cpoints[k].point.x * repos,
-									 this.shape().object.cpoints[k].point.y * repos);
-				ctx.lineTo(this.shape().object.cpoints[k].x * repos,
-			 			 		  	 this.shape().object.cpoints[k].y * repos);
-				ctx.moveTo(this.shape().object.cpoints[k].x * repos,
-			 			 		  	 this.shape().object.cpoints[k].y * repos);
-				ctx.arc(this.shape().object.cpoints[k].x  * repos,
-					 		      this.shape().object.cpoints[k].y * repos, 5, 0, 2*Math.PI);
+				ctx.moveTo(this.shape().cpoints[k].point.x * repos,
+									 this.shape().cpoints[k].point.y * repos);
+				ctx.lineTo(this.shape().cpoints[k].x * repos,
+			 			 		  	 this.shape().cpoints[k].y * repos);
+				ctx.moveTo(this.shape().cpoints[k].x * repos,
+			 			 		  	 this.shape().cpoints[k].y * repos);
+				ctx.arc(this.shape().cpoints[k].x  * repos,
+					 		      this.shape().cpoints[k].y * repos, 5, 0, 2*Math.PI);
 			}
 			//points along the curves
-			for (var k = 0; k < this.shape().object.rpoints.length; k++){
-				ctx.moveTo(this.shape().object.rpoints[k].x  * repos,
-					 		      this.shape().object.rpoints[k].y * repos);
-				ctx.arc(this.shape().object.rpoints[k].x  * repos,
-					 		      this.shape().object.rpoints[k].y * repos, 2, 0, 2*Math.PI);
+			for (var k = 0; k < this.shape().rpoints.length; k++){
+				ctx.moveTo(this.shape().rpoints[k].x  * repos,
+					 		      this.shape().rpoints[k].y * repos);
+				ctx.arc(this.shape().rpoints[k].x  * repos,
+					 		      this.shape().rpoints[k].y * repos, 2, 0, 2*Math.PI);
 			}
 		}
 		ctx.stroke();
@@ -234,13 +236,15 @@ Tools.transform = {
 	},
 	properties: {
 		width: '1',
-		height: '1'
+		height: '1',
+		rotate: '0',
 	},
 	reset_properties: function(){
 		this.scale = {x: 1, y: 1};
 		this.properties = {
 			width: '1',
-			height: '1'
+			height: '1',
+			rotate: '0',//Implement this!
 		};
 	},
 	init : function(){
