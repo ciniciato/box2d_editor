@@ -75,6 +75,7 @@ var Control = {
 				for (var i = 0; i < this.children.length; i++){
 					this.children[i].paste();
 				}
+				newBody.GUI.onClick();
 			}
 			
 			this.children.push(body);
@@ -113,6 +114,10 @@ Control.init = function(){
 
 	this.panels.toolbar    = document.getElementById('toolbar');
 	this.panels.workspace  = document.getElementById('workspace');
+
+	this.panels.toolsProperties    = GUI._list['Properties tools'];
+	this.panels.toolsProperties.pen    = GUI._list['Properties tools']._list['Pen properties'];
+	this.panels.toolsProperties.transform   = GUI._list['Properties tools']._list['Transform properties'];
 	
 	this.panels.control    = GUI.findChildren({property: 'name', value: 'Control panel'});
 	this.panels.objectList = GUI.findChildren({property: 'name', value: 'Object list'});
@@ -123,8 +128,8 @@ Control.init = function(){
 	}
 
 	this.panels.properties.wrap  = GUI.findChildren({property: 'name', value: 'Object properties'});
-	this.panels.properties.body  = GUI.findChildren({property: 'name', value: 'Body properties'});
-	this.panels.properties.shape = GUI.findChildren({property: 'name', value: 'Shape properties'});
+	this.panels.properties.body  = GUI.findChildren({property: 'name', value: 'Body properties', parent: this.panels.properties.wrap});
+	this.panels.properties.shape = GUI.findChildren({property: 'name', value: 'Shape properties', parent: this.panels.properties.wrap});
 
 	this.adjustPanels();
 }

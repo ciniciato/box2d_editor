@@ -346,6 +346,20 @@ GUI._list.Toolbar.addItem(
 							 }
 						);
 
+GUI._list.Toolbar.addItem(
+							new GUI.button({tooltip: 'Transform', 
+								 icon: 'assets/img/icon_transform.png',
+								 selectable: true
+							})
+						).do(
+							function(that){
+							 	that.events.onClick.push(function(that){ 
+							 		Tools.set('transform');
+									GUI._list['Properties tools'].showUnique('Transform properties');
+							  });								   
+							 }
+						);
+
 new GUI.container({name: 'Properties tools', preElem: 'toolbar', valign: true}).init().do(
 																							function(that){
 																								that.elem.className += ' border';
@@ -354,7 +368,13 @@ new GUI.container({name: 'Properties tools', preElem: 'toolbar', valign: true}).
 																						);
 
 
-GUI._list['Properties tools'].addItem(new GUI.container({name: 'Pen properties'}));
+GUI._list['Properties tools'].addItem(new GUI.container({name: 'Pen properties'})).do(
+	function(that){
+		that.load = function(){
+			this.doForAll(function(e){ e.load(); });
+		}
+	}
+);
 
 GUI._list['Properties tools'].children.last().addItem(new GUI.field({name: 'fixtures', 
 							type: 'check',
@@ -425,13 +445,22 @@ GUI._list['Properties tools'].children.last().addItem(new GUI.field({name: 'thre
 							}
 						}));
 
-GUI._list['Properties tools'].addItem(new GUI.container({name: 'Transform properties'}));
+GUI._list['Properties tools'].addItem(new GUI.container({name: 'Transform properties'})).do(
+	function(that){
+		that.load = function(){
+			this.doForAll(function(e){ e.load(); });
+		}
+	}
+);
+
+/*
 GUI._list['Properties tools'].children.last().addItem(new GUI.field({name: 'rotate', 
 							type: 'text',
 							link: function(val){ 
 								return Tools.transform.properties.rotate = (val == undefined) ? Tools.transform.properties.rotate : val;
 							}
 						}));
+*/
 GUI._list['Properties tools'].children.last().addItem(new GUI.field({name: 'width', 
 							type: 'text',
 							link: function(val){ 

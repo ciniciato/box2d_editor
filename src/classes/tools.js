@@ -3,6 +3,8 @@ var Tools = {
 	selected: null,
 	set: function(id){
 		if (this.selected !== this[id]){
+			if (this.selected != null)
+				this.selected.onchange();
 			this._prev = this.selected;
 			this.selected = this[id];
 			this.selected.init();
@@ -83,17 +85,29 @@ Tools.pen = {
 			}).GUI.onClick();
 			this.shape().add_point({x: Pointer.rX, y: Pointer.rY});
 		} else if (this.shape().type == 'shape'){ 
-			//if intersected select bezier point
-			var newpos = (!Keys.list[Keys.CTRL]) ? false : this.points_intersected(true, 'cpoint');
-			if (newpos != false){
-				this.selectedpoints = newpos;
-			} else 	{
+			if (this.shape().isClosed){
+				this.shape().parent.addShape({
+							properties: {
+										threshold: this.properties.threshold,
+										restitution: this.properties.restitution,
+										friction: this.properties.friction,
+										density: this.properties.density								
+									}
+				}).GUI.onClick();
 				this.shape().add_point({x: Pointer.rX, y: Pointer.rY});
-				var points = this.shape().cpoints;
-				//Select bezier anchors to selected points, so you can move then
-				this.selectedpoints = [];
-				this.selectedpoints.push(points.last());
-				this.selectedpoints.push(points.last(1));
+			} else {
+				//if intersected select bezier point
+				var newpos = (!Keys.list[Keys.CTRL]) ? false : this.points_intersected(true, 'cpoint');
+				if (newpos != false){
+					this.selectedpoints = newpos;
+				} else 	{
+					this.shape().add_point({x: Pointer.rX, y: Pointer.rY});
+					var points = this.shape().cpoints;
+					//Select bezier anchors to selected points, so you can move then
+					this.selectedpoints = [];
+					this.selectedpoints.push(points.last());
+					this.selectedpoints.push(points.last(1));
+				}
 			}
 		}
 	},
@@ -161,6 +175,7 @@ Tools.pen = {
 			obj.points.splice(obj.points.length - 1, 1);
 			obj.cpoints.splice(obj.cpoints.length - 1, 1);
 			obj.cpoints.splice(obj.cpoints.length - 1, 1);
+			if (obj.isClosed) obj.isClosed = false;
 			obj.update();
 		}
 	},
@@ -217,6 +232,9 @@ Tools.pen = {
 		}
 	},
 	update: function(){
+	},
+	onchange: function(){
+
 	}
 };
 
@@ -231,23 +249,19 @@ Tools.transform = {
 	scale : {x: 1, y: 1},
 	_selected: null,
 	shape: function () { 
-		if (Objects_list.selected != undefined){
-			/*
-			if (Objects_list.selected.object != this._selected && this._selected != null && this.hasChanged){
-				if (confirm("Apply the transformation?"))
-					this.apply();	
-				this.hasChanged = false;	
-			}
-			*/		
-			this._selected = Objects_list.selected.object;
-			return Objects_list.selected.object;
-		} else
-			return false; 
+		if (Control.panels.objectList.selectedChild != undefined){
+			if (!(Control.panels.objectList.selectedChild.link === this._selected) && this._selected !== null)
+				this.onchange();
+			this._selected = Control.panels.objectList.selectedChild.link;
+			return this._selected;
+		} else 
+			return null;
 	},
 	apply: function(){
 		this._selected.resize(this.scale);	
 		this.reset_properties();
-		Tools_properties.select(Tools.transform); 
+		Control.panels.toolsProperties.transform.load(); 
+		this.hasChanged = false;
 		this.update();		
 	},
 	properties: {
@@ -267,6 +281,17 @@ Tools.transform = {
 		Pointer.set_cursor('default');
 	},
 	onclick: function(){
+	},
+	onchange: function(){
+		if (this.hasChanged)
+			if (confirm("Apply the transformation?"))
+				this.apply();	
+			else{
+				this._selected.update();
+				this.reset_properties();
+				Control.panels.toolsProperties.transform.load(); 
+				this.hasChanged = false;
+			}
 	},
 	onmove: function(){
 		if (this.shape()){
@@ -292,12 +317,12 @@ Tools.transform = {
 							this.scale.x = utils.round(distx / this.size.width, 100);
 						}
 						if (this.properties.width != this.scale.x || this.properties.height != this.scale.y){
-							Tools_properties.select(Tools.transform); 
+							Control.panels.toolsProperties.transform.load(); 
 							this.properties.width = this.scale.x;
 							this.properties.height = this.scale.y;
+							this.hasChanged = true;
+							this.shape().resize_render(this.scale);	
 						}
-						this.hasChanged = true;
-						this.shape().resize_render(this.scale);	
 					}
 				}
 			} else {
@@ -333,14 +358,19 @@ Tools.transform = {
 		if (this.shape()){
 			this.update();
 			var ctx = _args.ctx, repos = _args.repos;
-			ctx.lineWidth = 2;
-			ctx.fillStyle = 'rgba(255, 198, 0, .7)';
-			ctx.strokeStyle = 'rgba(0, 0, 0, .7)';
+			ctx.lineWidth = .5;
+			if (this.hasChanged)
+				ctx.strokeStyle = 'rgba(255, 255, 255, 1)';
+			else
+				ctx.strokeStyle = 'rgba(255, 255, 255, .5)';
 			ctx.beginPath();
 			ctx.rect((this.origin.x - this.size.width * this.scale.x) * repos , 
 						(this.origin.y - this.size.height * this.scale.y) * repos, 
 						this.size.width * 2 * repos * this.scale.x, 
 						this.size.height * 2 * repos * this.scale.y);
+			ctx.stroke();
+			ctx.beginPath();
+			ctx.strokeStyle = 'rgba(255, 255, 255, 1)';
 			for (var property in this.points) 
 			    if (this.points.hasOwnProperty(property)){
 					ctx.rect((this.points[property].x - .05) * repos, 
@@ -404,6 +434,9 @@ Tools.scroll = {
 	render: function(_args){	
 	},
 	update: function(){
+	},
+	onchange: function(){
+
 	}
 }
 /*
