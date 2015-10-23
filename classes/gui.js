@@ -188,14 +188,22 @@ GUI.button = function(_args){
 	this.name = (_args.name == undefined) ? 'undefined' : _args.name;
 	this.type = 'button';
 	this.icon = (_args.icon == undefined) ? 'error' : _args.icon;
-	this.onclick = (_args.onclick == undefined) ?  function(){} : _args.onclick;
+
 	this.caption = (_args.caption == undefined) ? '' : _args.caption;
 	this.tooltip = (_args.tooltip == undefined) ? '' : _args.tooltip;
 	this.selectable = (_args.selectable == undefined) ? false : _args.selectable;
 
+	this.hotkey = (_args.hotkey == undefined) ? null : _args.hotkey;
+
 	this.events = {};
 	this.events.onClick = [];
 	GUI.object.call(this, _args);
+	if (this.hotkey != null){
+        var that = this;
+		Keys.hotkey_events.push({keys: this.hotkey, 
+							event: function(){ that.onClick(); } 
+						});
+	}
 }
 
 GUI.button.prototype             = new GUI.object(); 
@@ -236,8 +244,9 @@ GUI.button.prototype.createElem = function(){
 		this.elem.className = 'gui_button';
 		this.elem.id = this.id;
 		this.elem.innerHTML = str;
+		var that = this;
 		this.elem.addEventListener('click', function(event) {
-			GUI.methodById(this.id, 'onClick');
+			that.onClick();
 		}, false);
 	}
 	return this.elem;
@@ -337,6 +346,20 @@ GUI._list.Toolbar.addItem(
 							 }
 						);
 
+GUI._list.Toolbar.addItem(
+							new GUI.button({tooltip: 'Transform', 
+								 icon: 'assets/img/icon_transform.png',
+								 selectable: true
+							})
+						).do(
+							function(that){
+							 	that.events.onClick.push(function(that){ 
+							 		Tools.set('transform');
+									GUI._list['Properties tools'].showUnique('Transform properties');
+							  });								   
+							 }
+						);
+
 new GUI.container({name: 'Properties tools', preElem: 'toolbar', valign: true}).init().do(
 																							function(that){
 																								that.elem.className += ' border';
@@ -345,7 +368,13 @@ new GUI.container({name: 'Properties tools', preElem: 'toolbar', valign: true}).
 																						);
 
 
-GUI._list['Properties tools'].addItem(new GUI.container({name: 'Pen properties'}));
+GUI._list['Properties tools'].addItem(new GUI.container({name: 'Pen properties'})).do(
+	function(that){
+		that.load = function(){
+			this.doForAll(function(e){ e.load(); });
+		}
+	}
+);
 
 GUI._list['Properties tools'].children.last().addItem(new GUI.field({name: 'fixtures', 
 							type: 'check',
@@ -416,13 +445,22 @@ GUI._list['Properties tools'].children.last().addItem(new GUI.field({name: 'thre
 							}
 						}));
 
-GUI._list['Properties tools'].addItem(new GUI.container({name: 'Transform properties'}));
+GUI._list['Properties tools'].addItem(new GUI.container({name: 'Transform properties'})).do(
+	function(that){
+		that.load = function(){
+			this.doForAll(function(e){ e.load(); });
+		}
+	}
+);
+
+/*
 GUI._list['Properties tools'].children.last().addItem(new GUI.field({name: 'rotate', 
 							type: 'text',
 							link: function(val){ 
 								return Tools.transform.properties.rotate = (val == undefined) ? Tools.transform.properties.rotate : val;
 							}
 						}));
+*/
 GUI._list['Properties tools'].children.last().addItem(new GUI.field({name: 'width', 
 							type: 'text',
 							link: function(val){ 
@@ -474,13 +512,13 @@ GUI.children.last().addItem(new GUI.container({name: 'Object list', isSelector: 
 												); 
 				body_item.delete = function(){
 				 	var ind = GUI.getChildIndex({child: this, parent: Control.panels.objectList, property: 'objects'});
-				 	if (ind > 0){
+				 	if (ind > 0)
 				 		Control.panels.objectList.objects[ind - 1].onClick();
-				 	} else if (Control.panels.objectList.objects.length > 1){
+				 	else if (Control.panels.objectList.objects.length > 1)
 				 		Control.panels.objectList.objects[ind + 1].onClick();				 		
-				 	}
 				 	else
 				 		Control.panels.objectList.selectedChild = null;	
+				 	Control.panels.objectList.objects.splice(ind, 1);
  					Control.objectList.children.splice(Control.objectList.getChildIndex(this.link), 1);
  					this.parent.parent.elem.parentNode.removeChild(this.parent.parent.elem);//DOM element
 				 	this.parent.parent.parent.children.splice(GUI.getChildIndex({child: this.parent.parent}), 1);//GUI tree(this, content, folder)
@@ -538,7 +576,7 @@ GUI.children.last().addItem(new GUI.container({name: 'Menu'})).do(
 															function(that){
 																that.elem.style = 'text-align: center';
 																that.elem.className += ' border';
-																that.addItem(new GUI.button({tooltip: 'New&nbsp;body', icon: 'accessibility'})).do(
+																that.addItem(new GUI.button({tooltip: 'New&nbsp;body', icon: 'accessibility', hotkey: [Keys.CTRL, Keys.B]})).do(
 																		function(that){
 																			that.events.onClick.push(
 																							function(e){
@@ -547,7 +585,7 @@ GUI.children.last().addItem(new GUI.container({name: 'Menu'})).do(
 																						);																			
 																		}
 																	);
-																that.addItem(new GUI.button({tooltip: 'Delete', icon: 'delete'})).do(
+																that.addItem(new GUI.button({tooltip: 'Delete', icon: 'delete', hotkey: [Keys.DELETE]})).do(
 																		function(that){
 																			that.events.onClick.push(
 																							function(e){
@@ -557,7 +595,7 @@ GUI.children.last().addItem(new GUI.container({name: 'Menu'})).do(
 																						);																			
 																		}
 																	);
-																that.addItem(new GUI.button({tooltip: 'Copy', icon: 'content_copy'})).do(
+																that.addItem(new GUI.button({tooltip: 'Copy', icon: 'content_copy', hotkey: [Keys.CTRL, Keys.C]})).do(
 																		function(that){
 																			that.events.onClick.push(
 																							function(e){		
@@ -567,7 +605,7 @@ GUI.children.last().addItem(new GUI.container({name: 'Menu'})).do(
 																						);																			
 																		}
 																	);
-																that.addItem(new GUI.button({tooltip: 'Paste', icon: 'content_paste'})).do(
+																that.addItem(new GUI.button({tooltip: 'Paste', icon: 'content_paste', hotkey: [Keys.CTRL, Keys.V]})).do(
 																		function(that){
 																			that.events.onClick.push(
 																							function(e){

@@ -40,8 +40,8 @@ var physic_object = {
 				that.aabb.yf = (that.aabb.yf > shape.yf && that.aabb.yf != null) ? 
 								that.aabb.yf : shape.yf;
 			}
-			for (var i = 0; i < this.owner.children.length; i++){
-				setaabb(this.owner.children[i].object.aabb);
+			for (var i = 0; i < this.children.length; i++){
+				setaabb(this.children[i].aabb);
 			}
 		};
 
@@ -49,13 +49,13 @@ var physic_object = {
 			var
 				dx = this.get_origin().x,
 				dy = this.get_origin().y;
-			for (var i = 0; i < this.owner.children.length; i++){
+			for (var i = 0; i < this.children.length; i++){
 				var
-					px = this.owner.children[i].object.get_origin().x - dx,
-					py = this.owner.children[i].object.get_origin().y - dy;
-				this.owner.children[i].object.update();
-				this.owner.children[i].object.resize_render(scale);
-				this.owner.children[i].object.move_render({x: dx + px * scale.x, y: dy + py * scale.y});
+					px = this.children[i].get_origin().x - dx,
+					py = this.children[i].get_origin().y - dy;
+				this.children[i].update();
+				this.children[i].resize_render(scale);
+				this.children[i].move_render({x: dx + px * scale.x, y: dy + py * scale.y});
 			}
 		};
 
@@ -63,12 +63,12 @@ var physic_object = {
 			var
 				dx = this.get_origin().x,
 				dy = this.get_origin().y;
-			for (var i = 0; i < this.owner.children.length; i++){
+			for (var i = 0; i < this.children.length; i++){
 				var
-					px = this.owner.children[i].object.get_origin().x - dx,
-					py = this.owner.children[i].object.get_origin().y - dy;
-				this.owner.children[i].object.set_origin({x: dx + px * scale.x, y: dy + py * scale.y});
-				this.owner.children[i].object.resize(scale);
+					px = this.children[i].get_origin().x - dx,
+					py = this.children[i].get_origin().y - dy;
+				this.children[i].set_origin({x: dx + px * scale.x, y: dy + py * scale.y});
+				this.children[i].resize(scale);
 			}
 		};
 
@@ -76,11 +76,11 @@ var physic_object = {
 			var
 				dx = this.get_origin().x - point.x,
 				dy = this.get_origin().y - point.y;
-			for (var i = 0; i < this.owner.children.length; i++){
+			for (var i = 0; i < this.children.length; i++){
 				var
-					px = this.owner.children[i].object.get_origin().x - dx,
-					py = this.owner.children[i].object.get_origin().y - dy;
-				this.owner.children[i].object.set_origin({x: px, y: py});
+					px = this.children[i].get_origin().x - dx,
+					py = this.children[i].get_origin().y - dy;
+				this.children[i].set_origin({x: px, y: py});
 
 			}
 			this.update();
@@ -95,6 +95,7 @@ var physic_object = {
 	shape: function(){
 		var _args     = (_args == undefined) ? {} : _args;
 		this.type = 'shape';
+		this.isClosed = false;//last point == first point
 
 		//transform properties
 		this.aabb   = {x: null, y: null, xf: null, yf: null};
@@ -123,7 +124,9 @@ var physic_object = {
 
 		this.add_point = function(point){		
 			//Convert to scale, 1px = 1cm(minimum unity)
-			point = {x: utils.round(point.x, 100), y: utils.round(point.y, 100)};		
+			point = {x: utils.round(point.x, 100), y: utils.round(point.y, 100)};
+			if (this.points.length > 1 && point.x == this.points[0].x && point.y == this.points[0].y)
+				this.isClosed = true;		
 			this.points.push({ x: point.x,
 							   y: point.y});
 			this.cpoints.push({x: point.x,
@@ -186,18 +189,18 @@ var physic_object = {
 		    							this.cpoints[k+1], this.cpoints[k+1].point));
 				    	//remove duplicate points and nearer points, convert to minimun unity(0.1 cm)
 				    	if (utils.intersectedLine_point(this.rpoints.last(1), this.rpoints.last(), this.rpoints.last(2)))
-				    		this.rpoints.splice(this.rpoints.length-2, 1);
+				    		this.rpoints.splice(this.rpoints.length - 2, 1);
 
 		    			setaabb(this.rpoints.last());
 		    		}
 	    	};
-	    	this.rpoints = this.rpoints.removeDuplicates();
+	    	this.fpoints = this.rpoints.removeDuplicates();
 	    	//triangulation
 	    	this.isComplex = false;
-			if (utils.isClockwise(this.rpoints) == CLOCKWISE)
+			if (utils.isClockwise(this.fpoints) == CLOCKWISE)
 				this.rpoints.reverse();
-			if (utils.isConvex(this.rpoints) == CONCAVE){
-				this.fpoints = utils.process(this.rpoints);
+			if (utils.isConvex(this.fpoints) == CONCAVE){
+				this.fpoints = utils.process(this.fpoints);
 				this.isComplex = (this.fpoints == null) ? null : true;
 				if (this.fpoints == null) this.fpoints = [];
 				if (parseFloat(this.properties.fixtures) != Math.round(this.fpoints.length/3)){
@@ -211,9 +214,8 @@ var physic_object = {
 				}
 				this.fpoints = this.rpoints;
 			}		
-			//this.body.update();				 
+			this.parent.update();				 
 		};
-
 
 		this.move_render = function(point){
 			var old_origin = this.get_origin();
