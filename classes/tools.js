@@ -49,7 +49,7 @@ Tools.pen = {
 	that: Tools,
 	type: 'pen',//required for properties panel
 	selectedpoints: [],
-	shape: function () { return (object_list.selectedChild != undefined) ? object_list.selectedChild.link : null; },
+	shape: function () { return (Control.panels.objectList.selectedChild != undefined) ? Control.panels.objectList.selectedChild.link : null; },
 	properties: {
 		points: true,
 		fixtures: true,
@@ -63,24 +63,24 @@ Tools.pen = {
 	},
 	onclick: function(){
 		if (this.shape() == null){
-			object_list.addBody().addShape({
+			Control.objectList.addBody().addShape({
 						properties: {
 									threshold: this.properties.threshold,
 									restitution: this.properties.restitution,
 									friction: this.properties.friction,
 									density: this.properties.density								
 								}
-			}).onClick();
+			}).GUI.onClick();
 			this.shape().add_point({x: Pointer.rX, y: Pointer.rY});
 		}else if (this.shape().type == 'body'){
-			object_list.selectedChild.addShape({
+			this.shape().addShape({
 						properties: {
 									threshold: this.properties.threshold,
 									restitution: this.properties.restitution,
 									friction: this.properties.friction,
 									density: this.properties.density								
 								}
-			}).onClick();
+			}).GUI.onClick();
 			this.shape().add_point({x: Pointer.rX, y: Pointer.rY});
 		} else if (this.shape().type == 'shape'){ 
 			//if intersected select bezier point
@@ -167,12 +167,11 @@ Tools.pen = {
 	onkeyup: function(e){
 	},
 	render: function(_args){
-		var ctx = _args.ctx, repos = _args.repos;
-		ctx.lineWidth = 2;
-		ctx.fillStyle = 'rgba(255, 198, 0, .7)';
-		ctx.strokeStyle = 'rgba(0, 0, 0, .7)';
-		ctx.beginPath();
-		if (this.shape() != null && this.shape().type == 'shape' && this.properties.points){
+		var ctx = _args.ctx, repos = _args.repos
+		if (this.shape() != null && this.shape().type == 'shape'){;
+			ctx.lineWidth = 1;
+			ctx.strokeStyle = 'rgba(255, 255, 255, 1)';
+			ctx.beginPath();
 			//bezier curves and points
 			for (var k = 0; k < this.shape().cpoints.length; k++){
 				if (this.shape().points[k] != undefined){
@@ -191,14 +190,31 @@ Tools.pen = {
 					 		      this.shape().cpoints[k].y * repos, 5, 0, 2*Math.PI);
 			}
 			//points along the curves
-			for (var k = 0; k < this.shape().rpoints.length; k++){
+			for (var k = 0; k < this.shape().rpoints.length && this.properties.points; k++){
 				ctx.moveTo(this.shape().rpoints[k].x  * repos,
 					 		      this.shape().rpoints[k].y * repos);
 				ctx.arc(this.shape().rpoints[k].x  * repos,
 					 		      this.shape().rpoints[k].y * repos, 2, 0, 2*Math.PI);
+			}	
+			ctx.stroke();
+
+			ctx.strokeStyle = 'rgba(255, 255, 255, .1)';
+			ctx.beginPath();
+			
+			for (var k = 0; k < this.shape().fpoints.length && this.shape().isComplex && this.properties.fixtures; k+= 3){
+				if (this.shape().fpoints[k+2]!=undefined){
+					ctx.moveTo(this.shape().fpoints[k].x * repos,
+						 		     	 this.shape().fpoints[k].y * repos);
+					ctx.lineTo(this.shape().fpoints[k+1].x * repos,
+						 		     	 this.shape().fpoints[k+1].y * repos);
+					ctx.lineTo(this.shape().fpoints[k+2].x * repos,
+						 		     	 this.shape().fpoints[k+2].y * repos);
+					ctx.lineTo(this.shape().fpoints[k].x * repos,
+						 		     	 this.shape().fpoints[k].y * repos);
+				}
 			}
+			ctx.stroke();
 		}
-		ctx.stroke();
 	},
 	update: function(){
 	}

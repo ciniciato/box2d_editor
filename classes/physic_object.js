@@ -1,8 +1,7 @@
 var physic_object = {
 	body: function(_args){
-		var _args     = (_args == undefined) ? {} : _args;
-		this.owner = (_args.owner == undefined) ? null : _args.owner;
 		this.type = 'body';
+		this.children = [];
 
 		//transform properties
 		this.aabb   = {x: null, y: null, xf: null, yf: null};
@@ -87,24 +86,14 @@ var physic_object = {
 			this.update();
 		}
 
-		this.render = function(scale){
-		};
-
-		this.paste = function(){
-			var copy = new physic_object.body();
-			copy.properties = {
-				name: this.properties.name,
-				type: this.properties.type,
-				linearDamping: this.properties.linearDamping,
-				angularDamping: this.properties.angularDamping,
-				fixedRotation: this.properties.fixedRotation
-			}; 
-			return copy;
+		this.render = function(_args){
+			for (var i = 0; i < this.children.length; i++){
+				this.children[i].render(_args);
+			}
 		};
 	},
-	shape: function(_args){
+	shape: function(){
 		var _args     = (_args == undefined) ? {} : _args;
-		this.owner = (_args.owner == undefined) ? null : _args.owner;
 		this.type = 'shape';
 
 		//transform properties
@@ -213,18 +202,16 @@ var physic_object = {
 				if (this.fpoints == null) this.fpoints = [];
 				if (parseFloat(this.properties.fixtures) != Math.round(this.fpoints.length/3)){
 					this.properties.fixtures = Math.round(this.fpoints.length/3);
-					shape_properties.findChildren({property: 'name', value: 'fixtures'}).load();//update GUI field
+					Control.panels.properties.shape.findChildren({property: 'name', value: 'fixtures'}).load();//update GUI field
 				}
 			} else {
 				if (parseFloat(this.properties.fixtures) != 1){
 					this.properties.fixtures = 1;
-					shape_properties.findChildren({property: 'name', value: 'fixtures'}).load();//update GUI field
+					Control.panels.properties.shape.findChildren({property: 'name', value: 'fixtures'}).load();//update GUI field
 				}
 				this.fpoints = this.rpoints;
 			}		
-			//remove 'if', it must have owner
-		//	if (this.owner != undefined)
-		//		this.owner.parent.object.update();				 
+			//this.body.update();				 
 		};
 
 
@@ -260,48 +247,19 @@ var physic_object = {
 
 		this.render = function(_args){
 			var ctx = _args.ctx, repos = _args.repos;
-			ctx.lineWidth = 2;
-		//	if (this.owner.parent.object.properties.type == 'dynamic')
-		//		ctx.fillStyle = 'rgba(255, 198, 0, .7)';
-		//	else
-				ctx.fillStyle = 'rgba(0, 198, 255, .7)';
-			ctx.strokeStyle = 'rgba(0, 0, 0, .7)';
+			ctx.lineWidth = 1;
+			if (this.parent.properties.type == 'dynamic')
+				ctx.fillStyle = 'rgba(255, 198, 0, .3)';
+			else
+				ctx.fillStyle = 'rgba(0, 198, 255, .3)';
+			ctx.strokeStyle = 'rgba(255, 255, 255, .7)';
 			ctx.beginPath();
 			//Render shape contour
 			for (var k = 0; k < this.rpoints.length; k++)
 				ctx.lineTo(this.rpoints[k].x * repos,
 			    			this.rpoints[k].y * repos);
-			for (var k = 0; k < this.fpoints.length && this.isComplex; k += 3)
-				if (this.fpoints[k+2]!=undefined){
-					ctx.moveTo(this.fpoints[k].x * repos,
-						 		     	 this.fpoints[k].y * repos);
-					ctx.lineTo(this.fpoints[k+1].x * repos,
-						 		     	 this.fpoints[k+1].y * repos);
-					ctx.lineTo(this.fpoints[k+2].x * repos,
-						 		     	 this.fpoints[k+2].y * repos);
-					ctx.lineTo(this.fpoints[k].x * repos,
-						 		     	 this.fpoints[k].y * repos);
-				}
 			ctx.stroke();
 			ctx.fill();
-		};
-
-		this.paste = function(){
-			var copy = new physic_object.shape({});
-			copy.properties = {
-				name: this.properties.name,
-				density: this.properties.density,
-				friction: this.properties.friction,
-				restitution: this.properties.restitution,
-				threshold: this.properties.threshold,
-				fixtures: this.properties.fixtures
-			}; 
-			for (var i = 0; i < this.points.length; i++)
-				copy.points.push({x: this.points[i].x, y: this.points[i].y});
-			for (var i = 0; i < this.cpoints.length; i++)
-				copy.cpoints.push({x: this.cpoints[i].x, y: this.cpoints[i].y, point: copy.points[Math.floor(i/2)]})
-			copy.update();
-			return copy;
 		};
 	}
 }

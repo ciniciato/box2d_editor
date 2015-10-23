@@ -2,6 +2,7 @@
   font-family: 'Material Icons';
   font-style: normal;
   font-weight: 400;
+
   src: url(assets/fonts/MaterialIcons-Regular.eot); /* For IE6-8 */
   src: local('Material Icons'),
        local('MaterialIcons-Regular'),
@@ -11,11 +12,12 @@
 }
 
 .material-icons {
+  display: inline-block;
+
   font-family: 'Material Icons';
   font-weight: normal;
   font-style: normal;
   font-size: 24px; 
-  display: inline-block;
   text-transform: none;
   letter-spacing: normal;
   word-wrap: normal;
@@ -30,35 +32,49 @@
 html, body { 
 	margin: 0; 
 	padding: 0; 
+	
 	height: 100%; 
 	width: 100%;
+	
 	font-size: 12px;
 	font-family: 'Arial';
+	background: #212830;
 }
 
 
 #workspace{
 	overflow: hidden; 
+	width: 100%;
+	height: calc(100% - 64px);
 }
 
-#workspace table{
-	height: 100%;
-	width: 100%;
-	max-height: 100%;
+@media screen and (max-width: 600px) {
+	#toolbar{
+		height: 32px;
+		overflow: hidden;
+	}
+	#workspace{
+		height: calc(100% - 32px);
+	}
 }
 
 #workspace #td_panel{
-	height: 100%;
-	max-height: 100%;
 	width: 250px;
-	background: #464646;
-	vertical-align: top;
-	
+	position: relative;
+	float: right;
+	display: inline-block;
 }
 
-#workspace #td_canvas{
+#workspace #td_canvas{	
+	display: inline-block;
+	width: calc(100% - 250px);
 	height: 100%;
 }
+
+#workspace #td_canvas canvas{
+	width: 100%;
+	height: 100%;
+}	
 
 /**GUI STYLE**/
 .gui_container {
@@ -73,15 +89,9 @@ html, body {
 	box-sizing: border-box;	
 }
 
-.gui_container.border{
-	box-sizing: border-box;	
-	background: #535353;
+.border{
 	border: 1px solid #282828;
 	border-top: 1px solid #6a6a6a;
-}
-
-.gui_container.horizontal > *{
-	
 }
 
 .gui_container.vertical > *{
@@ -101,7 +111,6 @@ html, body {
 	margin: 0 2px;
 	border:1px solid transparent;
 
-
 	max-height: 30px;
 	max-width: 30px;
 	height: 30px;
@@ -114,6 +123,7 @@ html, body {
 	margin: 0;
 	max-height: 20px;
 	max-width: 20px;
+	
 	position: relative;
 	top: 50%;
 	transform: translateY(-50%);;
@@ -134,7 +144,7 @@ html, body {
 	background: linear-gradient(#757575, #626262); 
 }
 
-.gui_button.selected{
+.gui_button.selected, .gui_button:active{
 	border:1px solid #2a2a2a;
 
 	background: -webkit-linear-gradient(#3f3f3f, #373737);
@@ -179,7 +189,7 @@ html, body {
 	display: inline-block;
 }
 
-.gui_field input[type="text"]{
+.gui_field .input{
     font-size: 10px;
     line-height: 15px;
 	text-align: center;
@@ -198,24 +208,27 @@ html, body {
 	background: -moz-linear-gradient(#373737, #3a3a3a);
 	background: linear-gradient(#373737, #3a3a3a); 
 
-	width: 50px;
+	width: 100%;
 }
 
 .gui_field input[type="checkbox"] {
 	display:none;
 }
 
-.gui_field input[type="checkbox"] + label span {
+.gui_field input[type="checkbox"] + label span span {
     display:inline-block;
+    
     width:19px;
     height:19px;
-    margin:-1px 4px 0 0;
-    vertical-align:middle;
+    
+    margin: -1px 4px 0 0;
+    vertical-align: middle;
+    
     background:url(assets/img/check_radio_sheet.png) left top no-repeat;
     cursor:pointer;
 }
 
-.gui_field input[type="checkbox"]:checked + label span {
+.gui_field input[type="checkbox"]:checked + label span span {
     background:url(assets/img/check_radio_sheet.png) -19px top no-repeat;
 }
 
@@ -234,12 +247,11 @@ html, body {
 	padding: 0;
 }
 
+/**CUSTOM STYLE**/
 
 .panel_container{
-	background: red;
-	padding: 0;
+	padding: 0!important;
 }
-
 .object_list{
 	background: #464646!important;
 	overflow-y: scroll;
@@ -255,19 +267,21 @@ html, body {
 }
 
 .folder_wrap .gui_button{
-	margin: 0;
 	background: #535353;
+	
+	margin: 0;
+	
 	width: auto;
-	max-width: none;
 	height: auto;
+	max-width: none;
 	max-height: none;
+	
 	border-radius: 0;
 	border: 1px solid #333;
 	border-top: none;
 }
 
 .body_item, .shape_item {
-	background: red;
 	padding: 0;
 }
 
@@ -276,12 +290,17 @@ html, body {
 	height: 30px;
 }
 
+.folder_wrap .btn_view i{
+}
+
 .folder_wrap .btn_body, .folder_wrap .btn_shape{
 	border-left: none;
+	
+	height: 30px;
 	width: calc(100% - 30px);
+	
 	text-align: left;
 	position: relative;
-	height: 30px;
 }
 
 .btn_shape{
@@ -290,4 +309,20 @@ html, body {
 
 .btn_body.selected, .btn_shape.selected{
 	background: #6d7d92;
+}
+
+.object_properties{
+	padding: 5px 0;
+}
+
+.object_properties .gui_field{
+	margin: 5px 0;
+}
+
+.object_properties .gui_field label{
+	text-align: left;
+}
+
+#toolbar .gui_field .input{
+	width: 50px;
 }

@@ -1,5 +1,108 @@
 var Control = {
-	panels: {}
+	panels: { 
+		objectList: {
+
+		},
+		properties: {
+			wrap: {}
+		}
+	},
+	objectList: {
+		children: [],
+		buff: null,
+		addBody: function(_body){//physic_objects
+			var body =  (_body == undefined) ? new physic_object.body() : _body;
+				body.GUI = Control.panels.objectList.addBody().do(
+						function (that){
+							that.link = body;
+							that.onClick();
+						}
+					);
+
+			body.parent = this;
+
+			body.id = (this.children.length > 0) ? (this.children.last().id+1) : 0;
+
+			body.addShape = function(_args){
+				var shape =  (_args.shape == undefined) ? new physic_object.shape({properties: _args.properties}) : _args.shape;
+				shape.parent = this;
+				
+				shape.GUI = this.GUI.addShape();
+				shape.GUI.link = shape;
+				
+				shape.id = (this.children.length > 0) ? (this.children.last().id+1) : 0;
+
+				shape.paste = function(){
+					var copy = new physic_object.shape();
+					copy.properties = {
+						name: this.properties.name,
+						density: this.properties.density,
+						friction: this.properties.friction,
+						restitution: this.properties.restitution,
+						threshold: this.properties.threshold,
+						fixtures: this.properties.fixtures
+					}; 
+					for (var i = 0; i < this.points.length; i++)
+						copy.points.push({x: this.points[i].x, y: this.points[i].y});
+					for (var i = 0; i < this.cpoints.length; i++)
+						copy.cpoints.push({x: this.cpoints[i].x, y: this.cpoints[i].y, point: copy.points[Math.floor(i/2)]});
+
+					if (Control.panels.objectList.selectedChild.link.type == 'body'){
+						Control.panels.objectList.selectedChild.link.addShape({shape: copy});
+					} else if (Control.panels.objectList.selectedChild.link.type == 'shape'){
+						Control.panels.objectList.selectedChild.owner.onClick();
+						Control.panels.objectList.selectedChild.link.addShape({shape: copy});
+					}
+					copy.GUI.onClick();
+					copy.update();
+					return copy;
+				}
+
+				this.children.push(shape);
+				return shape;				
+			}
+
+			body.paste = function(){	
+				var newBody = new physic_object.body();
+				newBody.properties = {
+					name: this.properties.name,
+					type: this.properties.type,
+					linearDamping: this.properties.linearDamping,
+					angularDamping: this.properties.angularDamping,
+					fixedRotation: this.properties.fixedRotation
+				}; 
+				newBody = Control.objectList.addBody(newBody);
+				for (var i = 0; i < this.children.length; i++){
+					this.children[i].paste();
+				}
+			}
+			
+			this.children.push(body);
+			return body;
+		},
+		setId: function(_args){//type, parent
+			if (_args.parent == undefined) _args.parent = this;
+			var ind = 0;
+			for (var i = 0; i < _args.parent.children.length; i++)
+				if (_args.parent.children[i].type == _args.type)
+					ind++;
+			return ind;
+		},
+		getChildIndex: function(_child){
+			for (var i = 0; i < _child.parent.children.length && _child.parent.children[i].id !== _child.id; i++){}
+			return (i == _child.parent.children.length && i != 0) ? null : i;
+		},
+		getChild: function(_args){//id, parent
+			if (_args.parent == undefined) _args.parent = this;
+			for (var i = 0; i < _args.parent.children.length && _args.parent.children[i].id != _args.id; i++){}
+			return (i == _args.parent.children.length) ? null : _args.parent.children[i];
+		},
+		render: function(_args){//repos, ctx
+			for (var i = 0; i < this.children.length; i++){
+				this.children[i].render(_args);
+			}
+		}
+	}
 }
 
 Control.init = function(){
@@ -7,7 +110,6 @@ Control.init = function(){
 	Keys.init();
 	Pointer.init();
 	debugDraw.init();
-	this.adjustPanels();
 
 	this.panels.toolbar    = document.getElementById('toolbar');
 	this.panels.workspace  = document.getElementById('workspace');
@@ -17,22 +119,21 @@ Control.init = function(){
 	this.panels.objectList.resize = function(){
 		this.elem.style.display = 'none';
 		this.elem.style.height =  Control.panels.workspace.getBoundingClientRect().height - Control.panels.control.elem.getBoundingClientRect().height +'px';
-		this.elem.style.display = 'block';		
+		this.elem.style.display = 'block';
 	}
 
-	this.panels.properties = {}
+	this.panels.properties.wrap  = GUI.findChildren({property: 'name', value: 'Object properties'});
 	this.panels.properties.body  = GUI.findChildren({property: 'name', value: 'Body properties'});
 	this.panels.properties.shape = GUI.findChildren({property: 'name', value: 'Shape properties'});
+
+	this.adjustPanels();
 }
 
 Control.update = function(){
 }
 
 Control.adjustPanels = function(){//Automatize this!
-    document.getElementById('workspace').style.display = 'none';
-    document.getElementById('workspace').style.height = document.body.offsetHeight - document.getElementById('toolbar').offsetHeight + 'px';
-    document.getElementById('workspace').style.display = 'block';  
-	object_list.resize();
+	Control.panels.objectList.resize();
 	Camera.resize();
 }
 
@@ -42,7 +143,7 @@ Control.render = function(){
 	var repos = (World.scale * Camera.scale);
 	if (!debugDraw.isRunning){
 		Grid.render({ctx: Camera.ctx, repos: repos});
-		object_list.render({ctx: Camera.ctx, repos: repos});
+		this.objectList.render({ctx: Camera.ctx, repos: repos});
 		Tools.render({ctx: Camera.ctx, repos: repos});
 		Pointer.render({ctx: Camera.ctx, repos: repos});
 	}
@@ -66,13 +167,13 @@ Grid.render = function(_args){
 			reset = (Camera.position[pos] - Camera.size[size]) 
 					- (Camera.position[pos] - Camera.size[size]) % step;
 		strongerline = function(i){
-			return false;
-			//return (i % (step * that.squaresize) == 0);
+			//return false;
+			return (i % (step * that.squaresize) == 0);
 		}
 		for (var i = reset; i < end; i += step){
 			if (strongerline(i)){
 				ctx.stroke();
-				ctx.lineWidth = 3;
+				ctx.lineWidth = 1;
 				ctx.beginPath();
 			}       
 			if (orientation == 'vertical'){    
@@ -84,13 +185,13 @@ Grid.render = function(_args){
 			} 
 			if (strongerline(i)){
 				ctx.stroke();
-				ctx.lineWidth = 1;
+				ctx.lineWidth = .5;
 				ctx.beginPath(); 
 			}
 		}
 	}
-	ctx.strokeStyle = 'rgba(0, 0, 0, .4)';
-	ctx.lineWidth = 1;
+	ctx.strokeStyle = 'rgba(255, 255, 255, .4)';
+	ctx.lineWidth = .5;
 	ctx.beginPath();
 	lines('horizontal');
 	lines('vertical');

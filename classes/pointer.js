@@ -24,8 +24,7 @@ var Pointer = {
 		var ctx = _args.ctx, repos = _args.repos;
 		ctx.lineWidth = 2;
 		ctx.beginPath();
-		ctx.fillStyle = 'rgba(255, 198, 0, .7)';
-		ctx.strokeStyle = 'rgba(0, 0, 0, .7)';
+		ctx.strokeStyle = 'rgba(255, 255, 255, .7)';
 		ctx.arc(this.rX * repos, 
 					 		this.rY * repos, 
 					 		5, 0, 2*Math.PI);

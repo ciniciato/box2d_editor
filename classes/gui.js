@@ -20,6 +20,13 @@ var GUI = {
 
 		return result;
 	},
+	getChildIndex: function(_args){//child, property
+		if (_args.property == undefined) _args.property = 'children';
+		if (_args.parent == undefined) _args.parent = _args.child.parent;
+		for(var i = 0; i < _args.parent[_args.property].length && _args.parent[_args.property][i] != _args.child; i++){
+		}		
+		return (i == _args.parent[_args.property].length) ? null : i;
+	},
 	methodById: function(childId, method){
 		return this.findChildren({value: childId})[method]();
 	}
@@ -115,7 +122,6 @@ GUI.container = function(_args){
 	GUI.object.call(this, _args);
 	this.isSelector = (_args.isSelector == undefined) ? false : _args.isSelector;
 	this.valign = (_args.valign == undefined) ? false : _args.valign;//center vertical align 
-	this.hasBorder   = (_args.hasBorder == undefined) ? false : _args.hasBorder;
 	this.orientation   = (_args.orientation == undefined) ? 'horizontal' : 'vertical';
 	this.isTable   = (_args.isTable == undefined) ? false : _args.isTable;
 	if (this.isTable) { this.tableCols = {};}
@@ -244,6 +250,7 @@ GUI.field = function(_args){
 	this.name = (_args.name == undefined) ? 'undefined' : _args.name;
 	this.type       = 'field';
 	this.input_type = (_args.type == undefined) ? 'text' : _args.type;
+	this.options = (_args.options == undefined) ? '' : _args.options;
 	this.link = (_args.type == undefined) ? function(){} : _args.link; //function(){}; getter and setter
 
 	this.events = {};
@@ -260,19 +267,25 @@ GUI.field.prototype.createElem = function(){
 	if (this.elem == null){
 		var str = '';
 		if (this.input_type == 'check'){
-			str += '<input type="checkbox" id="cc'+this.id+'" onchange="GUI.methodById(&quot;'+this.id+'&quot;, &quot;onChange&quot;)" />';
-			str += '<label for="cc'+this.id+'"><span></span>'+this.name+'</label>';
+			str += '<input class="input" type="checkbox" id="cc'+this.id+'" onchange="GUI.methodById(&quot;'+this.id+'&quot;, &quot;onChange&quot;)" />';
+			str += '<label for="cc'+this.id+'"><span class="td_0"><span></span></span><span class="td_1">'+this.name+'</span></label>';
 		}
 		else if (this.input_type == 'text'){
-			str += '<label class="td_0">'+this.name+':</label><span class="input td_1">';
-			str += '<input type="text" onchange="GUI.methodById(&quot;'+this.id+'&quot;, &quot;onChange&quot;)" /></span>';
+			str += '<label class="td_0">'+this.name+':</label><span class="td_1">';
+			str += '<input class="input" type="text" onchange="GUI.methodById(&quot;'+this.id+'&quot;, &quot;onChange&quot;)" /></span>';
+		} else if (this.input_type == 'select'){
+			str += '<label class="td_0">'+this.name+':</label><span class="td_1">';
+			str += '<select class="input" onchange="GUI.methodById(&quot;'+this.id+'&quot;, &quot;onChange&quot;)">';
+			for (var i = 0; i < this.options.length; i++)
+				str += '<option value="'+this.options[i]+'">'+this.options[i]+'</option>';	
+			str += '</select>';		
 		}
 		var node  = document.createElement("span");
 		this.elem = (this.preElem != null) ? this.preElem.appendChild(node) : parent.elem.appendChild(node); 
 		this.elem.className = 'gui_field';
 		this.elem.id = this.id;
 		this.elem.innerHTML = str;
-		this.elem.field = this.elem.getElementsByTagName("input")[0];
+		this.elem.field = this.elem.getElementsByClassName("input")[0];
 		this.elem.field.that = this;
 		if (this.input_type == 'check')
 			this.elem.field._value = function(val){
@@ -326,6 +339,7 @@ GUI._list.Toolbar.addItem(
 
 new GUI.container({name: 'Properties tools', preElem: 'toolbar', valign: true}).init().do(
 																							function(that){
+																								that.elem.className += ' border';
 																								that.elem.style.height = GUI._list.Toolbar.elem.offsetHeight+"px";
 																							}
 																						);
@@ -348,25 +362,57 @@ GUI._list['Properties tools'].children.last().addItem(new GUI.field({name: 'poin
 GUI._list['Properties tools'].children.last().addItem(new GUI.field({name: 'density', 
 							type: 'text',
 							link: function(val){ 
-								return Tools.pen.properties.density = (val == undefined) ? Tools.pen.properties.density : val;
+								if (val == undefined){ 
+									return Tools.pen.properties.density;
+								} else{
+									if (!(parseFloat(val) >= 0)){
+										alert('Value must be positive');
+										this.load();
+									} else
+										Tools.pen.properties.density = val;
+								}
 							}
 						}));
 GUI._list['Properties tools'].children.last().addItem(new GUI.field({name: 'friction', 
 							type: 'text',
 							link: function(val){ 
-								return Tools.pen.properties.friction = (val == undefined) ? Tools.pen.properties.friction : val;
+								if (val == undefined){ 
+									return Tools.pen.properties.friction;
+								} else{
+									if (!(parseFloat(val) >= 0)){
+										alert('Value must be positive');
+										this.load();
+									} else
+										Tools.pen.properties.friction = val;
+								}
 							}
 						}));
 GUI._list['Properties tools'].children.last().addItem(new GUI.field({name: 'restitution', 
 							type: 'text',
 							link: function(val){ 
-								return Tools.pen.properties.restitution = (val == undefined) ? Tools.pen.properties.restitution : val; 
+								if (val == undefined){ 
+									return Tools.pen.properties.restitution;
+								} else{
+									if (!(parseFloat(val) >= 0 && parseFloat(val) <= 1)){
+										alert('Value must be between 0 and 1');
+										this.load();
+									} else
+										Tools.pen.properties.restitution = val;
+								} 
 							}
 						}));
 GUI._list['Properties tools'].children.last().addItem(new GUI.field({name: 'threshold', 
 							type: 'text',
 							link: function(val){ 
-								return Tools.pen.properties.threshold = (val == undefined) ? Tools.pen.properties.threshold : val;
+								if (val == undefined){ 
+									return Tools.pen.properties.threshold;
+								} else{
+									if (!(parseFloat(val) >= .01 && parseFloat(val) <= 1)){
+										alert('Value must be between 0.01 and 1');
+										this.load();
+									} else
+										Tools.pen.properties.threshold = val;
+								}
 							}
 						}));
 
@@ -392,34 +438,18 @@ GUI._list['Properties tools'].children.last().addItem(new GUI.field({name: 'heig
 
 GUI._list['Properties tools'].doForAll(function(that){ that.elem.style.display = 'none';  });
 
+new GUI.container({name: 'Control panel', preElem: 'td_panel'}).init().elem.className += ' panel_container border';
 
-var panel_container = new GUI.container({name: 'Control panel', preElem: 'td_panel'}).init();
-panel_container.elem.className += ' panel_container'
+GUI.children.last().addItem(new GUI.container({caption: 'Object list'})).elem.className += ' border gui_title';
 
-GUI.children.last().addItem(new GUI.container({caption: 'Object list'})).elem.className += ' border gui_title object_list_wrap';
-
-var object_list = GUI.children.last().addItem(new GUI.container({name: 'Object list', isSelector: true})).do(
-		function(that){
-
-			that.resize = function(){
-				this.elem.style.display = 'none';
-				this.elem.style.height = document.getElementById('workspace').getBoundingClientRect().height - panel_container.elem.getBoundingClientRect().height +'px';
-				this.elem.style.display = 'block';
-			}
-			
+GUI.children.last().addItem(new GUI.container({name: 'Object list', isSelector: true})).do(
+		function(that){			
 			that.elem.className += ' gui_list border object_list';
-			that.bodies = [];
-			
-			that.render = function(_args){
-				for (var i = 0; i < this.bodies.length; i++){
-					for (var k = 0; k < this.bodies[i].shapes.length; k++){
-						this.bodies[i].shapes[k].link.render(_args);
-					}
-				}
-			}
+			that.objects = [];//direct reference to object lsit
 			
 			that.addBody = function(){
 				this.addItem(new GUI.container({name: 'Folder'})).elem.className += ' folder_wrap';
+
 				var _body = {};
 				_body.wrapper = this.children.last().addItem(new GUI.container({name: 'Body content'}));
 				_body.wrapper.elem.className += ' body_item';
@@ -429,21 +459,32 @@ var object_list = GUI.children.last().addItem(new GUI.container({name: 'Object l
 				var body_item = _body.wrapper.addItem(new GUI.button({caption: 'Body', icon: 'accessibility', selectable: true})
 												).do(
 													function(that){
-														that.link = new physic_object.body({owner: that});
 														that.events.onClick.push(
 																		function(){
-																			object_properties.showUnique('Body properties').doForAll(
+																			Control.panels.properties.wrap.showUnique('Body properties').doForAll(
 																														function(e){ e.load(); }
 																													);
 																			Control.panels.objectList.resize();
 																		}
 																	);
-														that.list = parent.children.last().addItem(new GUI.container({name: 'Shapes'}));
+														that.list    = parent.children.last().addItem(new GUI.container({name: 'Shapes'}));
+														that.wrapper = _body.wrapper;//root reference
 														that.elem.className += ' btn_body';
-														that.wrapper = _body.wrapper;
-														that.shapes = [];
 													}
 												); 
+				body_item.delete = function(){
+				 	var ind = GUI.getChildIndex({child: this, parent: Control.panels.objectList, property: 'objects'});
+				 	if (ind > 0){
+				 		Control.panels.objectList.objects[ind - 1].onClick();
+				 	} else if (Control.panels.objectList.objects.length > 1){
+				 		Control.panels.objectList.objects[ind + 1].onClick();				 		
+				 	}
+				 	else
+				 		Control.panels.objectList.selectedChild = null;	
+ 					Control.objectList.children.splice(Control.objectList.getChildIndex(this.link), 1);
+ 					this.parent.parent.elem.parentNode.removeChild(this.parent.parent.elem);//DOM element
+				 	this.parent.parent.parent.children.splice(GUI.getChildIndex({child: this.parent.parent}), 1);//GUI tree(this, content, folder)
+				}
 
 				body_item.addShape = function(_args){
 					if (_args == undefined) _args = {}
@@ -453,25 +494,40 @@ var object_list = GUI.children.last().addItem(new GUI.container({name: 'Object l
 					shape.wrap.elem.className += ' shape_item';
 					shape.wrap.addItem(new GUI.button({name: 'view', tooltip: 'view&nbsp;this', icon: 'visibility'})).elem.className += ' btn_view';
 
-					this.shapes.push(shape.wrap.addItem(new GUI.button({caption: 'Shape', selectable: true})
+					var shape_item = shape.wrap.addItem(new GUI.button({caption: 'Shape', selectable: true})
 												).do(
 													function(that){
-														that.link = new physic_object.shape({properties: _args.properties, owner: that});
 														that.events.onClick.push(
 																		function(){
-																			object_properties.showUnique('Shape properties').doForAll(
+																			Control.panels.properties.wrap.showUnique('Shape properties').doForAll(
 																																	function(e){ e.load(); }
 																																);
 																			Control.panels.objectList.resize();
 																		}
 																	);
+														that.owner = body_item;
 														that.elem.className += ' btn_shape';
 													}
-												));
-					return this.shapes.last();
+												);
+
+					shape_item.delete = function(){
+					 	var ind = Control.objectList.getChildIndex(this.link);
+					 	if (ind > 0)
+					 		this.link.parent.children[ind - 1].GUI.onClick();
+					 	else if (this.link.parent.children.length > 1)
+					 		this.link.parent.children[ind + 1].GUI.onClick();	
+					 	else
+					 		this.link.parent.GUI.onClick();
+					 	//Remove references
+ 						this.owner.link.children.splice(Control.objectList.getChildIndex(this.link), 1);
+	 					this.parent.elem.parentNode.removeChild(this.parent.elem);//DOM element
+					 	this.parent.parent.children.splice(GUI.getChildIndex({child: this.parent}), 1);//GUI tree
+					}
+					
+					return shape_item;
 				}
 
-				this.bodies.push(body_item);
+				this.objects.push(body_item);
 
 				return body_item;
 			}
@@ -482,127 +538,224 @@ GUI.children.last().addItem(new GUI.container({name: 'Menu'})).do(
 															function(that){
 																that.elem.style = 'text-align: center';
 																that.elem.className += ' border';
-																that.addItem(new GUI.button({tooltip: 'New&nbsp;body', icon: 'accessibility'}));
-																that.addItem(new GUI.button({tooltip: 'Delete', icon: 'delete'}));
-																that.addItem(new GUI.button({tooltip: 'Copy', icon: 'content_copy'}));
-																that.addItem(new GUI.button({tooltip: 'Paste', icon: 'content_paste'}));
+																that.addItem(new GUI.button({tooltip: 'New&nbsp;body', icon: 'accessibility'})).do(
+																		function(that){
+																			that.events.onClick.push(
+																							function(e){
+																								Control.objectList.addBody();
+																							}
+																						);																			
+																		}
+																	);
+																that.addItem(new GUI.button({tooltip: 'Delete', icon: 'delete'})).do(
+																		function(that){
+																			that.events.onClick.push(
+																							function(e){
+																								if (Control.panels.objectList.selectedChild != null)
+																									Control.panels.objectList.selectedChild.delete();
+																							}
+																						);																			
+																		}
+																	);
+																that.addItem(new GUI.button({tooltip: 'Copy', icon: 'content_copy'})).do(
+																		function(that){
+																			that.events.onClick.push(
+																							function(e){		
+																								if (Control.panels.objectList.selectedChild != null)																						
+																									Control.objectList.buff = Control.panels.objectList.selectedChild.link;
+																							}
+																						);																			
+																		}
+																	);
+																that.addItem(new GUI.button({tooltip: 'Paste', icon: 'content_paste'})).do(
+																		function(that){
+																			that.events.onClick.push(
+																							function(e){
+																								if (Control.objectList.buff != null)
+																									Control.objectList.buff.paste();
+																							}
+																						);																			
+																		}
+																	);
 															}
 														); 
 
 
 GUI.children.last().addItem(new GUI.container({caption: 'Properties'})).elem.className += ' gui_title border';
 
-var object_properties = GUI.children.last().addItem(new GUI.container({name: 'Object properties'})).init();
-object_properties.elem.style = 'padding: 0';
+GUI.children.last().addItem(new GUI.container({name: 'Object properties'})).init().do(
+		function(that){ 
+			that.elem.className += ' object_properties border';
+		}
+	);
+
+GUI.children.last().children.last().addItem(new GUI.container({name: 'Body properties', orientation: 'vertical', isTable: true})).do(
+		function(that){
+			that.addItem(new GUI.field({name: 'name', 
+										type: 'text',
+										link: function(val){ 
+											if (Control.panels.objectList.selectedChild != null)
+												if (val == undefined){ 
+													return Control.panels.objectList.selectedChild.link.properties.name;
+												} else{
+													if (!(val !== '')){
+														Control.panels.objectList.selectedChild.link.properties.name = 'Body';
+														this.load();
+													} else
+														Control.panels.objectList.selectedChild.link.properties.name = val;
+												}
+										}
+									}));
+			that.addItem(new GUI.field({name: 'type', 
+										type: 'select',
+										options: ['dynamic', 'static'],
+										link: function(val){ 
+											if (Control.panels.objectList.selectedChild != null)
+											return Control.panels.objectList.selectedChild.link.properties.type = (val == undefined) 
+													? Control.panels.objectList.selectedChild.link.properties.type : val;
+										}
+									}));
+			that.addItem(new GUI.field({name: 'fixedRotation', 
+										type: 'select',
+										options: ['false', 'true'],
+										link: function(val){ 
+											if (Control.panels.objectList.selectedChild != null)
+											return Control.panels.objectList.selectedChild.link.properties.fixedRotation = (val == undefined) 
+													? Control.panels.objectList.selectedChild.link.properties.fixedRotation : val;
+										}
+									}));
+			that.addItem(new GUI.field({name: 'linearDamping', 
+										type: 'text',
+										link: function(val){ 
+											if (Control.panels.objectList.selectedChild != null)
+												if (val == undefined){ 
+													return Control.panels.objectList.selectedChild.link.properties.linearDamping;
+												} else{
+													if (!(parseFloat(val) >= .01 && parseFloat(val) <= 1)){
+														alert('Value must be between 0 and 1');
+														this.load();
+													} else
+														Control.panels.objectList.selectedChild.link.properties.linearDamping = val;
+												}
+										}
+									}));
+			that.addItem(new GUI.field({name: 'angularDamping', 
+										type: 'text',
+										link: function(val){ 
+											if (Control.panels.objectList.selectedChild != null)
+												if (val == undefined){ 
+													return Control.panels.objectList.selectedChild.link.properties.angularDamping;
+												} else{
+													if (!(parseFloat(val) >= .01 && parseFloat(val) <= 1)){
+														alert('Value must be between 0 and 1');
+														this.load();
+													} else
+														Control.panels.objectList.selectedChild.link.properties.angularDamping = val;
+												}
+										}
+									}));
+		}
+	);
 
 
-var body_properties = object_properties.addItem(new GUI.container({name: 'Body properties', orientation: 'vertical', isTable: true}));
-body_properties.elem.className += ' ';
 
-body_properties.addItem(new GUI.field({name: 'name', 
+GUI.children.last().children.last().addItem(new GUI.container({name: 'Shape properties', orientation: 'vertical', isTable: true})).do(
+	function(that){
+		that.addItem(new GUI.field({name: 'name', 
+									type: 'text',
+									link: function(val){ 
+										if (Control.panels.objectList.selectedChild != null)
+											if (val == undefined){ 
+												return Control.panels.objectList.selectedChild.link.properties.name;
+											} else{
+												if (!(val != '')){
+													Control.panels.objectList.selectedChild.link.properties.name = 'Shape';
+													this.load();
+												} else
+													Control.panels.objectList.selectedChild.link.properties.name = val;
+											}
+									}
+								}));
+		that.addItem(new GUI.field({name: 'fixtures', 
+									type: 'text',
+									link: function(val){ 
+										if (Control.panels.objectList.selectedChild != null)
+										return Control.panels.objectList.selectedChild.link.properties.fixtures = (val == undefined) 
+												? Control.panels.objectList.selectedChild.link.properties.fixtures : val;
+									}
+								}));
+		that.addItem(new GUI.field({name: 'density', 
+									type: 'text',
+									link: function(val){ 
+										if (Control.panels.objectList.selectedChild != null)
+											if (val == undefined){ 
+												return Control.panels.objectList.selectedChild.link.properties.density;
+											} else{
+												if (!(parseFloat(val) >= 0)){
+													alert('Value must be positive')
+													this.load();
+												} else
+													Control.panels.objectList.selectedChild.link.properties.density = val;
+											}
+									}
+								}));
+		that.addItem(new GUI.field({name: 'friction', 
+									type: 'text',
+									link: function(val){ 
+										if (Control.panels.objectList.selectedChild != null)
+											if (val == undefined){ 
+												return Control.panels.objectList.selectedChild.link.properties.friction;
+											} else{
+												if (!(parseFloat(val) >= 0)){
+													alert('Value must be positive')
+													this.load();
+												} else
+													Control.panels.objectList.selectedChild.link.properties.friction = val;
+											}
+									}
+								}));
+		that.addItem(new GUI.field({name: 'restitution', 
+									type: 'text',
+									link: function(val){ 
+										if (Control.panels.objectList.selectedChild != null)
+											if (val == undefined){ 
+												return Control.panels.objectList.selectedChild.link.properties.restitution;
+											} else{
+												if (!(parseFloat(val) >= .01 && parseFloat(val) <= 1)){
+													alert('Value must be between 0 and 1');
+													this.load();
+												} else
+													Control.panels.objectList.selectedChild.link.properties.restitution = val;
+											}
+									}
+								}));
+		that.addItem(new GUI.field({name: 'threshold', 
 							type: 'text',
 							link: function(val){ 
-								if (object_list.selectedChild != null)
-								return object_list.selectedChild.link.properties.name = (val == undefined) 
-										? object_list.selectedChild.link.properties.name : val;
-							}
-						}));
-body_properties.addItem(new GUI.field({name: 'type', 
-							type: 'text',
-							link: function(val){ 
-								if (object_list.selectedChild != null)
-								return object_list.selectedChild.link.properties.type = (val == undefined) 
-										? object_list.selectedChild.link.properties.type : val;
-							}
-						}));
-body_properties.addItem(new GUI.field({name: 'fixedRotation', 
-							type: 'text',
-							link: function(val){ 
-								if (object_list.selectedChild != null)
-								return object_list.selectedChild.link.properties.fixedRotation = (val == undefined) 
-										? object_list.selectedChild.link.properties.fixedRotation : val;
-							}
-						}));
-body_properties.addItem(new GUI.field({name: 'linearDamping', 
-							type: 'text',
-							link: function(val){ 
-								if (object_list.selectedChild != null)
-								return object_list.selectedChild.link.properties.linearDamping = (val == undefined) 
-										? object_list.selectedChild.link.properties.linearDamping : val;
-							}
-						}));
-body_properties.addItem(new GUI.field({name: 'AngularDamping', 
-							type: 'text',
-							link: function(val){ 
-								if (object_list.selectedChild != null)
-								return object_list.selectedChild.link.properties.linearDamping = (val == undefined) 
-										? object_list.selectedChild.link.properties.linearDamping : val;
-							}
-						}));
-
-
-var shape_properties = object_properties.addItem(new GUI.container({name: 'Shape properties', orientation: 'vertical', isTable: true}));
-shape_properties.elem.className += ' border';
-
-shape_properties.addItem(new GUI.field({name: 'name', 
-							type: 'text',
-							link: function(val){ 
-								if (object_list.selectedChild != null)
-								return object_list.selectedChild.link.properties.name = (val == undefined) 
-										? object_list.selectedChild.link.properties.name : val;
-							}
-						}));
-shape_properties.addItem(new GUI.field({name: 'fixtures', 
-							type: 'text',
-							link: function(val){ 
-								if (object_list.selectedChild != null)
-								return object_list.selectedChild.link.properties.fixtures = (val == undefined) 
-										? object_list.selectedChild.link.properties.fixtures : val;
-							}
-						}));
-shape_properties.addItem(new GUI.field({name: 'density', 
-							type: 'text',
-							link: function(val){ 
-								if (object_list.selectedChild != null)
-								return object_list.selectedChild.link.properties.density = (val == undefined) 
-										? object_list.selectedChild.link.properties.density : val;
-							}
-						}));
-shape_properties.addItem(new GUI.field({name: 'friction', 
-							type: 'text',
-							link: function(val){ 
-								if (object_list.selectedChild != null)
-								return object_list.selectedChild.link.properties.friction = (val == undefined) 
-										? object_list.selectedChild.link.properties.friction : val;
-							}
-						}));
-shape_properties.addItem(new GUI.field({name: 'restitution', 
-							type: 'text',
-							link: function(val){ 
-								if (object_list.selectedChild != null)
-								return object_list.selectedChild.link.properties.restitution = (val == undefined) 
-										? object_list.selectedChild.link.properties.restitution : val;
-							}
-						}));
-shape_properties.addItem(
-						new GUI.field({name: 'threshold', 
-							type: 'text',
-							link: function(val){ 
-								if (object_list.selectedChild != null)
-								return object_list.selectedChild.link.properties.threshold = (val == undefined) 
-										? object_list.selectedChild.link.properties.threshold : val;
+								if (Control.panels.objectList.selectedChild != null)
+									if (val == undefined){ 
+										return Control.panels.objectList.selectedChild.link.properties.threshold;
+									} else{
+										if (!(parseFloat(val) >= .01 && parseFloat(val) <= 1)){
+											alert('Value must be between 0.01 and 1');
+											this.load();
+										} else
+											Control.panels.objectList.selectedChild.link.properties.threshold = val;
+									}
 							}
 						})
 					).do(
 						function(that){
 							that.events.onChange.push(
 								function (that){
-									if (object_list.selectedChild != null)
-										object_list.selectedChild.link.update();
+									if (Control.panels.objectList.selectedChild != null)
+										Control.panels.objectList.selectedChild.link.update();
 
 								}
 							);	
 						}
 					);
-							
-object_properties.doForAll(function(that){ that.elem.style.display = 'none';  });
+
+	});
+			
+GUI.children.last().children.last().doForAll(function(that){ that.elem.style.display = 'none'; });
