@@ -1,3 +1,9 @@
+var EPSILON = 0.0000000001,
+    CLOCKWISE = 1,
+    COUNTERCLOCKWISE = -1,
+    CONCAVE = -1,
+    CONVEX = 1;
+
 var utils = {
 }
 
@@ -29,6 +35,13 @@ utils.round = function(val, amount){
   return Math.round(val*amount)/amount;
 }
 
+utils.intersectedLine_point = function(_point, pLineA, pLineB){
+  if (_point == undefined || pLineA == undefined || pLineB == undefined)
+    return false;
+  var m = (pLineB.y - pLineA.y) / (pLineB.x - pLineA.x);
+  return ( utils.round(_point.y - pLineA.y - m * (_point.x - pLineA.x), 1000) == 0);
+}
+
 utils.bezierInterpolation = function(t, a, b, c, d) {
   var t2 = t * t,
       t3 = t2 * t,
@@ -40,7 +53,7 @@ utils.bezierInterpolation = function(t, a, b, c, d) {
            + (3 * b.y + t * (-6 * b.y + b.y * 3 * t)) * t
            + (c.y * 3 - c.y * 3 * t) * t2
            + d.y * t3);
-  return {x: x, y: y};
+  return {x: utils.round(x, 10000), y: utils.round(y, 10000)};
 }
 
 //Triangulation functions
@@ -52,23 +65,18 @@ utils.process = function(contour) {
       nv = n,
       m,
       count = 2 * nv; 
-  if (n < 3) {
+  if (n < 3)
     return null;
-  }
   if (0.0 < this.area(contour)) {
-    for (v = 0; v < n; v++) {
+    for (v = 0; v < n; v++)
       verts[v] = v;
-    }
-  } else {
-    for (v = 0; v < n; v++) {
+  } else
+    for (v = 0; v < n; v++)
       verts[v] = (n - 1) - v;
-    }
-  }
   for (m = 0, v = nv - 1; nv > 2;) {
-    if (0 >= (count--)) {
+    if (0 >= (count--))
       return null;
-    }
-  var u = v;
+    var u = v;
     if (nv <= u) {
       u = 0; 
     }
@@ -80,7 +88,7 @@ utils.process = function(contour) {
     if (nv <= w) {
       w = 0;
     }
-    if (this.snip(contour, u, v, w, nv, verts)) {
+    if (utils.snip(contour, u, v, w, nv, verts)) {
       var a, b, c, s, t;
       a = verts[u];
       b = verts[v];
@@ -89,9 +97,8 @@ utils.process = function(contour) {
       result.push(contour[b]);
       result.push(contour[c]);
       m++;
-      for (s = v, t = v + 1; t < nv; s++, t++) {
+      for (s = v, t = v + 1; t < nv; s++, t++)
         verts[s] = verts[t];
-      }
       nv--;
       count = 2 * nv;
     }
@@ -145,70 +152,60 @@ utils.snip = function (contour, u, v, w, n, verts){
     return false;
   }
   for (p = 0; p < n; p++) {
-    if ((p == u) || (p == v) || (p == w)) {
+    if (p == u || p == v || p == w) 
       continue;
-    }
     px = contour[verts[p]].x
     py = contour[verts[p]].y
-    if (this.insideTriangle(ax, ay, bx, by, cx, cy, px, py)) {
+    if (utils.insideTriangle(ax, ay, bx, by, cx, cy, px, py))
       return false;
-    }
   }
   return true;
 }
 
-utils.clockwise = function (p){
+utils.isClockwise = function (p){
   var i, j, k, z,
       count = 0,
       n = p.length;
-  if (n < 3) {
-    return (0);
-  }
+  if (n < 3)
+    return 0;
   for (i = 0; i < n; i++) {
     j = (i + 1) % n;
     k = (i + 2) % n;
     z  = (p[j].x - p[i].x) * (p[k].y - p[j].y);
     z -= (p[j].y - p[i].y) * (p[k].x - p[j].x);
-    if (z < 0) {
+    if (z < 0)
       count--;
-    } else if (z > 0) {
+    else if (z > 0)
       count++;
-    }
   }
-  if (count > 0) {
-    return (COUNTERCLOCKWISE);
-  } else if (count < 0) {
-    return (CLOCKWISE);
-  } else {
-    return (0);
-  }
+  if (count > 0)
+    return COUNTERCLOCKWISE;
+  else if (count < 0)
+    return CLOCKWISE;
+  else
+    return 0;
 }
 
-utils.convex = function (p){
+utils.isConvex = function (p){
   var i, j, k, z,
       flag = 0,
       n = p.length;
-
-  if (n < 3) {
-    return (0);
-  }
+  if (n < 3)
+    return 0;
   for (i = 0; i < n; i++) {
     j = (i + 1) % n;
     k = (i + 2) % n;
     z  = (p[j].x - p[i].x) * (p[k].y - p[j].y);
     z -= (p[j].y - p[i].y) * (p[k].x - p[j].x);
-    if (z < 0) {
+    if (z < 0)
       flag |= 1;
-    } else if (z > 0) {
+    else if (z > 0)
       flag |= 2;
-    }
-    if (flag === 3) {
-      return (CONCAVE);
-    }
+    if (flag === 3)
+      return CONCAVE;
   }
-  if (flag !== 0) {
-    return (CONVEX);
-  } else {
-    return (0);
-  }
+  if (flag !== 0)
+    return CONVEX;
+  else
+    return 0;
 }

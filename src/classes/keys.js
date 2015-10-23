@@ -21,7 +21,11 @@ var Keys = {
 
 Keys.down = function(e){
 	Keys.list[e.which] = 1;
-	Tools.onkeydown(e);
+	if (e.target.tagName != 'INPUT'){
+		Tools.onkeydown(e);
+		if (e.which == Keys.DELETE && Control.objectList.selectedChild != null)
+			Control.objectList.selectedChild.delete();
+	}
 	if (e.target === document.body)
 		if ((e.which == Keys.BACKSPACE) ||
 		 (e.which == Keys.ENTER) ||
@@ -35,7 +39,8 @@ Keys.down = function(e){
 }
 
 Keys.up = function(e) {
-	Tools.onkeyup(e);
+	if (e.target.tagName != 'INPUT')
+		Tools.onkeyup(e);
 	delete Keys.list[e.which];
 }
 

@@ -24,8 +24,7 @@ var Pointer = {
 		var ctx = _args.ctx, repos = _args.repos;
 		ctx.lineWidth = 2;
 		ctx.beginPath();
-		ctx.fillStyle = 'rgba(255, 198, 0, .7)';
-		ctx.strokeStyle = 'rgba(0, 0, 0, .7)';
+		ctx.strokeStyle = 'rgba(255, 255, 255, .7)';
 		ctx.arc(this.rX * repos, 
 					 		this.rY * repos, 
 					 		5, 0, 2*Math.PI);
@@ -35,8 +34,8 @@ var Pointer = {
 		if (!this.isDown) {
 			this.isDown = true;
 			this.evt = e;
-			this.X  = e.pageX;
-			this.Y  = e.pageY - (window.innerHeight - Camera.canvas.height);
+			this.X  = e.pageX - Camera.canvas.position.x;
+			this.Y  = e.pageY - Camera.canvas.position.y;
 			this.DragX = this.rX;
 			this.DragY = this.rY;
 
@@ -45,12 +44,18 @@ var Pointer = {
 	},
 	pointerMove : function(e) {
 		if (e != undefined){
-			this.X  = e.pageX;
-			this.Y  = e.pageY - (window.innerHeight - Camera.canvas.height);
+			this.X  = e.pageX - Camera.canvas.position.x;
+			this.Y  = e.pageY - Camera.canvas.position.y;
 		}
 		this.rX = Camera.position.x - Camera.size.width  + this.X / (World.scale * Camera.scale),
 		this.rY = Camera.position.y - Camera.size.height + this.Y / (World.scale * Camera.scale);
-    	
+    	//ortogonal
+    	/*
+    	this.rX = Camera.position.x - Camera.size.width  + this.X / (World.scale * Camera.scale);
+    	this.rX =this.rX - this.rX%(Grid.cellsize/Math.round(Camera.scale));
+		this.rY = Camera.position.y - Camera.size.height + this.Y / (World.scale * Camera.scale);
+    	this.rY =this.rY - this.rY%(Grid.cellsize/Math.round(Camera.scale));
+    	*/
     	this.hasMoved = (this.rX != this.DragX || this.rY != this.DragY);
 		
 		Tools.onmove();		
@@ -93,14 +98,14 @@ var Pointer = {
 		}, false);
 		if (window.addEventListener) this.elem.addEventListener('DOMMouseScroll', function(e) { 
 			self.wheelDelta = e.detail * 10;
-	        var value =  Camera.scale - e.detail/30;
+	        var value =  Camera.follow.scale - e.detail/30;
 	        if (value >= .5)
 		        Camera.zoom(value);
 			return false; 
 		}, false); 
 		this.elem.onmousewheel = function () { 
 			self.wheelDelta = -event.wheelDelta * .25;
-	        var value =  Camera.scale - self.wheelDelta/30;
+	        var value =  Camera.follow.scale - self.wheelDelta/30;
 	        if (value >= .5)
 		        Camera.zoom(value);
 			return false; 

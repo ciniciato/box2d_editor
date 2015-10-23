@@ -1,13 +1,17 @@
 var Tools = {
-	prev: null,
+	_prev: null, //previous tool
 	selected: null,
 	set: function(id){
 		if (this.selected !== this[id]){
+			this._prev = this.selected;
 			this.selected = this[id];
-			this.prev = id;
-			Camera.canvas.style.cursor = this[id].cursor;
 			this.selected.init();
 		}
+	},
+	prev: function(){
+		this.selected = this._prev;
+		if (this.selected != null)
+			this.selected.init();
 	},
 	onclick: function(){
 		if (this.selected != undefined)
@@ -22,6 +26,8 @@ var Tools = {
 			this.selected.onup();
 	},
 	onkeydown: function(e){
+		if (e.keyCode == Keys.SPACE)
+			this.set('scroll');
 		if (this.selected != undefined)
 			this.selected.onkeydown(e);
 	},
@@ -38,50 +44,52 @@ var Tools = {
 	}
 };
 
-//Apply zoom to anchor points
+//Apply zoom to anchor points, see photoshop tool and remake
 Tools.pen = {
 	that: Tools,
-	cursor: 'none',
 	type: 'pen',//required for properties panel
 	selectedpoints: [],
-	shape: function () { return Objects_list.selected; },
+	shape: function () { return (Control.panels.objectList.selectedChild != undefined) ? Control.panels.objectList.selectedChild.link : null; },
 	properties: {
+		points: true,
+		fixtures: true,
 		threshold: '.05',
 		restitution: '0',
 		friction: '1',
 		density: '1'
 	},
 	init : function(){
+		Pointer.set_cursor('none');
 	},
 	onclick: function(){
 		if (this.shape() == null){
-			Objects_list.select(Objects_list.add_item(new object.body()).add_item(new object.shape({
-					properties: {
+			Control.objectList.addBody().addShape({
+						properties: {
 									threshold: this.properties.threshold,
 									restitution: this.properties.restitution,
 									friction: this.properties.friction,
 									density: this.properties.density								
 								}
-					})).id);
-			this.shape().object.add_point({x: Pointer.rX, y: Pointer.rY});
-		} else if (this.shape().object.type == 'body'){
-			Objects_list.select(this.shape().add_item(new object.shape({
-					properties: {
+			}).GUI.onClick();
+			this.shape().add_point({x: Pointer.rX, y: Pointer.rY});
+		}else if (this.shape().type == 'body'){
+			this.shape().addShape({
+						properties: {
 									threshold: this.properties.threshold,
 									restitution: this.properties.restitution,
 									friction: this.properties.friction,
 									density: this.properties.density								
 								}
-					})).id);
-			this.shape().object.add_point({x: Pointer.rX, y: Pointer.rY});
-		} else if (this.shape().object.type == 'shape'){ 
+			}).GUI.onClick();
+			this.shape().add_point({x: Pointer.rX, y: Pointer.rY});
+		} else if (this.shape().type == 'shape'){ 
 			//if intersected select bezier point
 			var newpos = (!Keys.list[Keys.CTRL]) ? false : this.points_intersected(true, 'cpoint');
 			if (newpos != false){
 				this.selectedpoints = newpos;
 			} else 	{
-				this.shape().object.add_point({x: Pointer.rX, y: Pointer.rY});
-				var points = this.shape().object.cpoints;
+				this.shape().add_point({x: Pointer.rX, y: Pointer.rY});
+				var points = this.shape().cpoints;
 				//Select bezier anchors to selected points, so you can move then
 				this.selectedpoints = [];
 				this.selectedpoints.push(points.last());
@@ -93,23 +101,23 @@ Tools.pen = {
 		_array = (_array != undefined) ? _array : false;
 		_type = (_type != undefined) ? _type : 'all';
 		var res = [];
-		if (this.shape() != null){
-			for (var i = 0; i < this.shape().object.cpoints.length; i++){
+		if (this.shape() != null && this.shape().type == 'shape'){
+			for (var i = 0; i < this.shape().cpoints.length; i++){
 				for (var k = 0; k < this.selectedpoints.length &&
-					this.shape().object.cpoints[i] != this.selectedpoints[k]; k++){
+					this.shape().cpoints[i] != this.selectedpoints[k]; k++){
 				}
 				if (k == this.selectedpoints.length){ 
-					if (_type != 'cpoint' && this.shape().object.points[i] != undefined &&
-						Pointer.intersect({position: this.shape().object.points[i], size: {width: .05, height: .05}})){
+					if (_type != 'cpoint' && this.shape().points[i] != undefined &&
+						Pointer.intersect({position: this.shape().points[i], size: {width: .05, height: .05}})){
 						if (_array)
-							res.push(this.shape().object.points[i]);
+							res.push(this.shape().points[i]);
 						else
-							return this.shape().object.points[i];
-					} else if (Pointer.intersect({position: this.shape().object.cpoints[i], size: {width: .05, height: .05}})){
+							return this.shape().points[i];
+					} else if (Pointer.intersect({position: this.shape().cpoints[i], size: {width: .05, height: .05}})){
 						if (_array)
-							res.push(this.shape().object.cpoints[i]);
+							res.push(this.shape().cpoints[i]);
 						else
-							return this.shape().object.cpoints[i];
+							return this.shape().cpoints[i];
 					} 
 				}
 			}		
@@ -140,7 +148,7 @@ Tools.pen = {
 					this.selectedpoints[i].y = Pointer.rY;
 				}
 			}
-			this.shape().object.update();
+			this.shape().update();
 		}
 	},
 	onup: function(){
@@ -149,7 +157,7 @@ Tools.pen = {
 	onkeydown: function(e){
 		//Review preventdefault, only allowed in inputs
 		if (e.keyCode == Keys.BACKSPACE){
-			var obj = this.shape().object;
+			var obj = this.shape();
 			obj.points.splice(obj.points.length - 1, 1);
 			obj.cpoints.splice(obj.cpoints.length - 1, 1);
 			obj.cpoints.splice(obj.cpoints.length - 1, 1);
@@ -159,38 +167,54 @@ Tools.pen = {
 	onkeyup: function(e){
 	},
 	render: function(_args){
-		var ctx = _args.ctx, repos = _args.repos;
-		ctx.lineWidth = 2;
-		ctx.fillStyle = 'rgba(255, 198, 0, .7)';
-		ctx.strokeStyle = 'rgba(0, 0, 0, .7)';
-		ctx.beginPath();
-		if (this.shape() != null && this.shape().object.type == 'shape'){
+		var ctx = _args.ctx, repos = _args.repos
+		if (this.shape() != null && this.shape().type == 'shape'){;
+			ctx.lineWidth = 1;
+			ctx.strokeStyle = 'rgba(255, 255, 255, 1)';
+			ctx.beginPath();
 			//bezier curves and points
-			for (var k = 0; k < this.shape().object.cpoints.length; k++){
-				if (this.shape().object.points[k] != undefined){
-					ctx.moveTo(this.shape().object.points[k].x * repos,
-										 this.shape().object.points[k].y * repos);
-					ctx.arc(this.shape().object.points[k].x * repos,
-							 		  this.shape().object.points[k].y * repos, 5, 0, 2*Math.PI);
+			for (var k = 0; k < this.shape().cpoints.length; k++){
+				if (this.shape().points[k] != undefined){
+					ctx.moveTo(this.shape().points[k].x * repos,
+										 this.shape().points[k].y * repos);
+					ctx.arc(this.shape().points[k].x * repos,
+							 		  this.shape().points[k].y * repos, 5, 0, 2*Math.PI);
 				}
-				ctx.moveTo(this.shape().object.cpoints[k].point.x * repos,
-									 this.shape().object.cpoints[k].point.y * repos);
-				ctx.lineTo(this.shape().object.cpoints[k].x * repos,
-			 			 		  	 this.shape().object.cpoints[k].y * repos);
-				ctx.moveTo(this.shape().object.cpoints[k].x * repos,
-			 			 		  	 this.shape().object.cpoints[k].y * repos);
-				ctx.arc(this.shape().object.cpoints[k].x  * repos,
-					 		      this.shape().object.cpoints[k].y * repos, 5, 0, 2*Math.PI);
+				ctx.moveTo(this.shape().cpoints[k].point.x * repos,
+									 this.shape().cpoints[k].point.y * repos);
+				ctx.lineTo(this.shape().cpoints[k].x * repos,
+			 			 		  	 this.shape().cpoints[k].y * repos);
+				ctx.moveTo(this.shape().cpoints[k].x * repos,
+			 			 		  	 this.shape().cpoints[k].y * repos);
+				ctx.arc(this.shape().cpoints[k].x  * repos,
+					 		      this.shape().cpoints[k].y * repos, 5, 0, 2*Math.PI);
 			}
 			//points along the curves
-			for (var k = 0; k < this.shape().object.rpoints.length; k++){
-				ctx.moveTo(this.shape().object.rpoints[k].x  * repos,
-					 		      this.shape().object.rpoints[k].y * repos);
-				ctx.arc(this.shape().object.rpoints[k].x  * repos,
-					 		      this.shape().object.rpoints[k].y * repos, 2, 0, 2*Math.PI);
+			for (var k = 0; k < this.shape().rpoints.length && this.properties.points; k++){
+				ctx.moveTo(this.shape().rpoints[k].x  * repos,
+					 		      this.shape().rpoints[k].y * repos);
+				ctx.arc(this.shape().rpoints[k].x  * repos,
+					 		      this.shape().rpoints[k].y * repos, 2, 0, 2*Math.PI);
+			}	
+			ctx.stroke();
+
+			ctx.strokeStyle = 'rgba(255, 255, 255, .1)';
+			ctx.beginPath();
+			
+			for (var k = 0; k < this.shape().fpoints.length && this.shape().isComplex && this.properties.fixtures; k+= 3){
+				if (this.shape().fpoints[k+2]!=undefined){
+					ctx.moveTo(this.shape().fpoints[k].x * repos,
+						 		     	 this.shape().fpoints[k].y * repos);
+					ctx.lineTo(this.shape().fpoints[k+1].x * repos,
+						 		     	 this.shape().fpoints[k+1].y * repos);
+					ctx.lineTo(this.shape().fpoints[k+2].x * repos,
+						 		     	 this.shape().fpoints[k+2].y * repos);
+					ctx.lineTo(this.shape().fpoints[k].x * repos,
+						 		     	 this.shape().fpoints[k].y * repos);
+				}
 			}
+			ctx.stroke();
 		}
-		ctx.stroke();
 	},
 	update: function(){
 	}
@@ -198,39 +222,62 @@ Tools.pen = {
 
 //Change center resize
 Tools.transform = {
-	cursor: 'default',
 	option: 'default',
 	type  : 'transform',//required for properties panel
+	hasChanged: false,
 	points: {nw: null, n: null, ne: null, e: null, se: null, s: null,  sw: null, w: null},//anchors points to resize
 	origin: {x: null, y: null},
 	size  : {width: null, height: null},
 	scale : {x: 1, y: 1},
-	shape: function () { return Objects_list.selected; },
+	_selected: null,
+	shape: function () { 
+		if (Objects_list.selected != undefined){
+			/*
+			if (Objects_list.selected.object != this._selected && this._selected != null && this.hasChanged){
+				if (confirm("Apply the transformation?"))
+					this.apply();	
+				this.hasChanged = false;	
+			}
+			*/		
+			this._selected = Objects_list.selected.object;
+			return Objects_list.selected.object;
+		} else
+			return false; 
+	},
+	apply: function(){
+		this._selected.resize(this.scale);	
+		this.reset_properties();
+		Tools_properties.select(Tools.transform); 
+		this.update();		
+	},
 	properties: {
 		width: '1',
-		height: '1'
+		height: '1',
+		rotate: '0',
 	},
 	reset_properties: function(){
 		this.scale = {x: 1, y: 1};
 		this.properties = {
 			width: '1',
-			height: '1'
+			height: '1',
+			rotate: '0',//Implement this!
 		};
 	},
 	init : function(){
+		Pointer.set_cursor('default');
 	},
 	onclick: function(){
 	},
 	onmove: function(){
-		if (this.shape() != undefined){
+		if (this.shape()){
 			this.update();
 			if (Pointer.isDown && this.option != 'default'){
 				if (Pointer.hasMoved){
 					if (this.option == 'move'){//move
-						this.shape().object.set_origin({
+						this.shape().set_origin({
 								x: this.origin.x - (Pointer.DragX - Pointer.rX),
 								y: this.origin.y - (Pointer.DragY - Pointer.rY)});
-						this.shape().object.resize_render(this.scale);	
+						this.shape().resize_render(this.scale);	
 						Pointer.DragX = Pointer.rX;
 						Pointer.DragY = Pointer.rY;
 					} else if (this.option.indexOf('resize') > -1){
@@ -249,7 +296,8 @@ Tools.transform = {
 							this.properties.width = this.scale.x;
 							this.properties.height = this.scale.y;
 						}
-						this.shape().object.resize_render(this.scale);	
+						this.hasChanged = true;
+						this.shape().resize_render(this.scale);	
 					}
 				}
 			} else {
@@ -276,16 +324,13 @@ Tools.transform = {
 	},
 	onkeydown: function(e){
 		if (e.keyCode == Keys.ENTER){
-			this.shape().object.resize(this.scale);	
-			this.reset_properties();
-			Tools_properties.select(Tools.transform); 
-			this.update();
+			this.apply();
 		}
 	},
 	onkeyup: function(key){
 	},
 	render: function(_args){
-		if (this.shape() != undefined){
+		if (this.shape()){
 			this.update();
 			var ctx = _args.ctx, repos = _args.repos;
 			ctx.lineWidth = 2;
@@ -307,32 +352,60 @@ Tools.transform = {
 		}
 	},
 	update: function(){
-		if (this.shape() != undefined){
+		if (this.shape()){
 			this.scale.x = parseFloat(this.properties.width);
 			this.scale.y = parseFloat(this.properties.height);
-			this.origin = this.shape().object.get_origin();
-			this.size = this.shape().object.get_size();
-			this.shape().object.resize_render(this.scale);	
+			this.origin  = this.shape().get_origin();
+			this.size    = this.shape().get_size();
+			this.shape().resize_render(this.scale);	
 			this.points.nw = {x: this.origin.x - this.size.width * Math.abs(this.scale.x), 
 								y: this.origin.y - this.size.height * Math.abs(this.scale.y)};
-			this.points.n = {x: this.origin.x, 
+			this.points.n  = {x: this.origin.x, 
 								y: this.origin.y - this.size.height * Math.abs(this.scale.y)};
 			this.points.ne = {x: this.origin.x + this.size.width * Math.abs(this.scale.x), 
 								y: this.origin.y - this.size.height * Math.abs(this.scale.y)};
-			this.points.e = {x: this.origin.x + this.size.width * Math.abs(this.scale.x), 
+			this.points.e  = {x: this.origin.x + this.size.width * Math.abs(this.scale.x), 
 								y: this.origin.y};
 			this.points.se = {x: this.origin.x + this.size.width * Math.abs(this.scale.x), 
 								y: this.origin.y + this.size.height * Math.abs(this.scale.y)};
-			this.points.s = {x: this.origin.x, 
+			this.points.s  = {x: this.origin.x, 
 								y: this.origin.y + this.size.height * Math.abs(this.scale.y)};
 			this.points.sw = {x: this.origin.x - this.size.width * Math.abs(this.scale.x), 
 								y: this.origin.y + this.size.height * Math.abs(this.scale.y)};
-			this.points.w = {x: this.origin.x - this.size.width * Math.abs(this.scale.x), 
+			this.points.w  = {x: this.origin.x - this.size.width * Math.abs(this.scale.x), 
 								y: this.origin.y};
 		}
 	}
 }
 
+Tools.scroll = {
+	init : function(){
+		Pointer.set_cursor('grab');
+	},
+	onclick: function(){
+		Pointer.set_cursor('grabbing');
+	},
+	onmove: function(){
+		if (Pointer.isDown && Pointer.hasMoved){
+			Camera.move({x: Pointer.rX - Pointer.DragX, y: Pointer.rY - Pointer.DragY});	
+			Pointer.DragX = Pointer.rX;
+			Pointer.DragY = Pointer.rY;
+		}
+	},
+	onup: function(){
+		Pointer.set_cursor('grab');
+	},
+	onkeydown: function(e){
+	},
+	onkeyup: function(e){
+		if (e.keyCode == Keys.SPACE)
+			Tools.prev();
+	},
+	render: function(_args){	
+	},
+	update: function(){
+	}
+}
 /*
 
 Tools.transform = {

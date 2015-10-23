@@ -37,7 +37,7 @@ var EPSILON = 0.0000000001,
 
 var Box2d =  {};
 
-Box2d.create_poly = function(_position, _points, _options, _body){
+Box2d.create_poly = function(_points, _options, _body){
 	var fix_def  = new b2FixtureDef,
 		complex  = false;
 	if (_options === undefined)
@@ -51,11 +51,10 @@ Box2d.create_poly = function(_position, _points, _options, _body){
 		body_def.type           = (_options.type===undefined) ? b2Body.b2_dynamicBody : _options.type;
 		var _body = World.CreateBody(body_def);
 	} 
-	if (this.Math.ClockWise(_points) === CLOCKWISE)
+	if (utils.isClockwise(_points) == CLOCKWISE)
 		_points.reverse();
-	if (this.Math.Convex(_points) === CONCAVE)
-		complex = true;
-	
+	if (utils.isConvex(_points) == CONCAVE)
+		complex = true;	
 	fix_def.shape = new b2PolygonShape();
 	fix_def.density         = (_options.density===undefined) ? 1.0 : _options.density;
 	fix_def.friction        = (_options.friction===undefined) ? 1.0 : _options.friction;
@@ -63,7 +62,7 @@ Box2d.create_poly = function(_position, _points, _options, _body){
 	fix_def.userData        = (_options.userData===undefined) ? null : _options.userData;
 	
 	if (complex) {
-		var tmp = this.Math.process(_points);
+		var tmp = utils.process(_points);
 		if (tmp != null) {
 			for (i = 0; i < tmp.length; i = i + 3) {
 				fix_def.shape.SetAsArray(new Array(tmp[i], tmp[i + 1], tmp[i + 2]));
