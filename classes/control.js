@@ -207,12 +207,13 @@ debugDraw = new b2DebugDraw();
 debugDraw.bodies = [];
 
 debugDraw.isRunning = false;
+debugDraw.prevTool = '';
 
 debugDraw.init = function(){
 	this.SetSprite(Camera.ctx);
 	this.SetDrawScale(World.scale * Camera.scale);
-	this.SetFillAlpha(.7);
-	this.SetLineThickness(1.0);
+	this.SetFillAlpha(.5);
+	this.SetLineThickness(.5);
 	this.SetFlags(b2DebugDraw.e_shapeBit | b2DebugDraw.e_jointBit);
 	World.SetDebugDraw(this);
 }
@@ -230,7 +231,12 @@ debugDraw.run = function(){
 			World.DestroyBody(this.bodies[i]);
 		this.bodies = [];
 		this.isRunning = false;
+		if (this.prevTool != '')
+			GUI._list.Toolbar._list[this.prevTool].onClick();
 	} else {
+		if (Tools.selected != null)
+			this.prevTool = Tools.selected.name;
+		Tools.set('movePhysic');
 		this.isRunning = true;
 		Pointer.set_cursor('default');
 		this.create();
@@ -238,21 +244,22 @@ debugDraw.run = function(){
 }
 
 debugDraw.create = function(){
-    for (var k = 0; k < Objects_list.children.length; k++){
-    	var obj = Objects_list.children[k].object, origin = obj.get_origin();
+    for (var k = 0; k < Control.objectList.children.length; k++){
+    	var obj = Control.objectList.children[k], origin = obj.get_origin();
     	obj.update();
         this.bodies.push(Box2d.create_body(origin,
                                      {           type: (obj.properties.type=='static') ? b2Body.b2_staticBody : b2Body.b2_dynamicBody,
                                        angularDamping: parseFloat(obj.properties.angularDamping),
                                         linearDamping: parseFloat(obj.properties.linearDamping),
                                         fixedRotation: (obj.properties.fixedRotation=='true') ? true : false }));
-        for (var i = 0; i < Objects_list.children[k].children.length; i++){
-        	obj = Objects_list.children[k].children[i].object;
+        for (var i = 0; i < Control.objectList.children[k].children.length; i++){
+        	obj = Control.objectList.children[k].children[i];
         	obj.update();
+           	var rpoints = obj.rpoints.removeDuplicates();
             var points = [];
-            for (var c = 0; c < obj.rpoints.length; c++)
-                points.push({ x: -origin.x + obj.rpoints[c].x ,
-                              y: -origin.y + obj.rpoints[c].y});
+            for (var c = 0; c < rpoints.length; c++)
+                points.push({ x: -origin.x + rpoints[c].x ,
+                              y: -origin.y + rpoints[c].y});
             Box2d.create_poly(points, 
                     {restitution: parseFloat(obj.properties.restitution),
                          density: parseFloat(obj.properties.density),
