@@ -350,6 +350,22 @@ GUI._list.Toolbar.addItem(
 
 GUI._list.Toolbar.addItem(
 							new GUI.button({
+								name: 'Select points',
+								tooltip: 'Select&nbsp;points', 
+								icon: 'assets/img/icon_selectpoint.png',
+								selectable: true
+							})
+						).do(
+							function(that){
+							 	that.events.onClick.push(function(that){ 
+							 		Tools.set('selectPoints');
+									GUI._list['Properties tools'].showUnique('');
+							  });								   
+							 }
+						);
+
+GUI._list.Toolbar.addItem(
+							new GUI.button({
 								name: 'Transform',
 								tooltip: 'Transform', 
 								icon: 'assets/img/icon_transform.png',
@@ -383,7 +399,7 @@ GUI._list.Toolbar.addItem(
 new GUI.container({name: 'Properties tools', preElem: 'toolbar', valign: true}).init().do(
 																							function(that){
 																								that.elem.className += ' border';
-																								that.elem.style.height = GUI._list.Toolbar.elem.offsetHeight+"px";
+																								that.elem.style.height = "32px";
 																							}
 																						);
 

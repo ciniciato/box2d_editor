@@ -147,7 +147,7 @@ Control.render = function(){
 	Camera.clear();	
 	var repos = (World.scale * Camera.scale);
 	if (!debugDraw.isRunning){
-		Grid.render({ctx: Camera.ctx, repos: repos});
+		//Grid.render({ctx: Camera.ctx, repos: repos});
 		this.objectList.render({ctx: Camera.ctx, repos: repos});
 		Tools.render({ctx: Camera.ctx, repos: repos});
 		Pointer.render({ctx: Camera.ctx, repos: repos});
@@ -156,8 +156,8 @@ Control.render = function(){
 }
 
 var Grid = {
-	cellsize: .5,
-	squaresize: 5
+	cellsize: 5,
+	squaresize: 1
 }
 
 //TO FIX: strongerlines when zooming
@@ -172,7 +172,7 @@ Grid.render = function(_args){
 			reset = (Camera.position[pos] - Camera.size[size]) 
 					- (Camera.position[pos] - Camera.size[size]) % step;
 		strongerline = function(i){
-			//return false;
+			return false;
 			return (i % (step * that.squaresize) == 0);
 		}
 		for (var i = reset; i < end; i += step){
@@ -244,6 +244,12 @@ debugDraw.run = function(){
 }
 
 debugDraw.create = function(){
+	//used in mouse joint
+	this.bodies.push(Box2d.create_body({x: 0, y: 0},
+                                     {           type: b2Body.b2_staticBody,
+                                       angularDamping: 0,
+                                        linearDamping: 0,
+                                        fixedRotation: true}));
     for (var k = 0; k < Control.objectList.children.length; k++){
     	var obj = Control.objectList.children[k], origin = obj.get_origin();
     	obj.update();

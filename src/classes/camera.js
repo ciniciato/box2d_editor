@@ -1,11 +1,11 @@
 //need to be optimzed!
 var Camera = {
-	follow        : {x: 0, y: 0, scale: 1},
-	position      : {x: 0, y: 0},
+	follow        : {x: 100, y: 100, scale: 10},
+	position      : {x: 100, y: 100},
 	position_dif  : {x: 0, y: 0},
 	size          : {width:  0,
 					 height: 0},
-	scale: 1,
+	scale: 10,
 	canvas : null,
 	ctx    : null
 }
@@ -17,7 +17,7 @@ Camera.init = function(){
 	this.ctx = this.canvas.getContext("2d");
 	this.ctx.save();
 	this.resize();
-	this.follow = {x: this.size.width, y: this.size.height, scale: 1};
+	this.follow = {x: 100, y: 100, scale: 10};
 }
 
 Camera.resize = function(){
