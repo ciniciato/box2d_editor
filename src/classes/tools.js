@@ -49,6 +49,7 @@ var Tools = {
 //Apply zoom to anchor points, see photoshop tool and remake
 Tools.pen = {
 	that: Tools,
+	name: 'Pen',
 	type: 'pen',//required for properties panel
 	selectedpoints: [],
 	shape: function () { return (Control.panels.objectList.selectedChild != undefined) ? Control.panels.objectList.selectedChild.link : null; },
@@ -240,6 +241,7 @@ Tools.pen = {
 
 //Change center resize
 Tools.transform = {
+	name: 'Transform',
 	option: 'default',
 	type  : 'transform',//required for properties panel
 	hasChanged: false,
@@ -385,6 +387,8 @@ Tools.transform = {
 		if (this.shape()){
 			this.scale.x = parseFloat(this.properties.width);
 			this.scale.y = parseFloat(this.properties.height);
+			if (this.scale.x != 1 || this.scale.y != 1)
+				this.hasChanged = true;
 			this.origin  = this.shape().get_origin();
 			this.size    = this.shape().get_size();
 			this.shape().resize_render(this.scale);	
@@ -409,6 +413,7 @@ Tools.transform = {
 }
 
 Tools.scroll = {
+	name: 'Scroll',
 	init : function(){
 		Pointer.set_cursor('grab');
 	},
@@ -436,12 +441,81 @@ Tools.scroll = {
 	update: function(){
 	},
 	onchange: function(){
+	}
+}
 
+
+Tools.movePhysic = {
+	name: 'movePhysic',
+	joint: false, 
+	getBodyAtMouse: function(){
+	    var aabb = new b2AABB();
+	    aabb.lowerBound.Set(Pointer.rX - 0.001, Pointer.rY - 0.001);
+	    aabb.upperBound.Set(Pointer.rX + 0.001, Pointer.rY + 0.001);
+	    var body = null;
+	    function GetBodyCallback(fixture){
+	        if (fixture.GetBody().GetType() != b2Body.b2_staticBody && fixture.GetShape().TestPoint(fixture.GetBody().GetTransform(), {x: Pointer.rX, y: Pointer.rY})){
+                body = fixture.GetBody();
+                return false;
+	        }      
+	        return true;
+	    }	     
+	    World.QueryAABB(GetBodyCallback, aabb);
+	    return body;
+	}, 
+	init : function(){
+		Pointer.set_cursor('grab');
+	},
+	onclick: function(){
+		Pointer.set_cursor('grabbing');
+	},
+	onmove: function(){
+		if(Pointer.isDown && !this.joint && (body = this.getBodyAtMouse())){
+            var def = new b2MouseJointDef();                 
+            def.bodyA  = debugDraw.bodies[0];
+            def.bodyB  = body;
+            def.target = {x: Pointer.rX, y: Pointer.rY};                 
+            def.collideConnected = true;
+            def.maxForce = 100 * body.GetMass();
+            def.dampingRatio = 0;                 
+            this.joint = World.CreateJoint(def);                 
+            body.SetAwake(true);
+        }
+		if(this.joint)
+            this.joint.SetTarget({x: Pointer.rX, y: Pointer.rY});
+	},
+	onup: function(){
+		if(this.joint){
+            World.DestroyJoint(this.joint);
+            this.joint = false;
+        }
+		Pointer.set_cursor('grab');
+	},
+	onkeydown: function(e){
+	},
+	onkeyup: function(key){
+	},
+	render: function(_args){
+		var ctx = _args.ctx, repos = _args.repos;
+		ctx.lineWidth = 2;
+		ctx.fillStyle = 'rgba(255, 198, 0, .7)';
+		ctx.strokeStyle = 'rgba(0, 0, 0, .7)';
+		ctx.beginPath();
+		ctx.stroke();		
+	},
+	update: function(){
+	},
+	onchange: function(){
+		for (var i = 0; i < debugDraw.bodies.length; i++)
+			World.DestroyBody(debugDraw.bodies[i]);
+		debugDraw.bodies = [];
+		debugDraw.isRunning = false;
 	}
 }
 /*
 
 Tools.transform = {
+	name: '',
 	cursor: 'move',
 	type: 'transform',//required for properties panel
 	shape: function () { return Objects_list.selected; },
@@ -469,6 +543,8 @@ Tools.transform = {
 		ctx.stroke();		
 	},
 	update: function(){
+	},
+	onchange: function(){
 	}
 }
 */

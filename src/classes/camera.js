@@ -67,6 +67,7 @@ Camera.update = function (){
 	//smooth zoom
 	if (d != 0){
 		this.scale = utils.round(this.scale + d * Math.min(5, Math.pow(d, 2) * 0.01), 1000);
+		debugDraw.m_drawScale = World.scale * this.scale;
 		this.set()
 		repos = (World.scale * this.scale);
 		this.ctx.resetTransform();		

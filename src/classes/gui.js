@@ -333,9 +333,11 @@ new GUI.container({name: 'Toolbar', isSelector: true, preElem: 'toolbar'}).init(
 																				);
 
 GUI._list.Toolbar.addItem(
-							new GUI.button({tooltip: 'Pen', 
-								 icon: 'assets/img/icon_pen.png',
-								 selectable: true
+							new GUI.button({
+								name: 'Pen',
+								tooltip: 'Pen', 
+								icon: 'assets/img/icon_pen.png',
+								selectable: true
 							})
 						).do(
 							function(that){
@@ -347,15 +349,33 @@ GUI._list.Toolbar.addItem(
 						);
 
 GUI._list.Toolbar.addItem(
-							new GUI.button({tooltip: 'Transform', 
-								 icon: 'assets/img/icon_transform.png',
-								 selectable: true
+							new GUI.button({
+								name: 'Transform',
+								tooltip: 'Transform', 
+								icon: 'assets/img/icon_transform.png',
+								selectable: true
 							})
 						).do(
 							function(that){
 							 	that.events.onClick.push(function(that){ 
 							 		Tools.set('transform');
 									GUI._list['Properties tools'].showUnique('Transform properties');
+							  });								   
+							 }
+						);
+
+GUI._list.Toolbar.addItem(
+							new GUI.button({
+								name: 'Run',
+								tooltip: 'Run', 
+								icon: 'play_arrow',
+								selectable: true
+							})
+						).do(
+							function(that){
+							 	that.events.onClick.push(function(that){ 
+									GUI._list['Properties tools'].showUnique('Run properties');
+							 		debugDraw.run();
 							  });								   
 							 }
 						);
@@ -474,6 +494,30 @@ GUI._list['Properties tools'].children.last().addItem(new GUI.field({name: 'heig
 							}
 						}));
 
+
+GUI._list['Properties tools'].addItem(new GUI.container({name: 'Run properties'})).do(
+	function(that){
+		that.load = function(){
+			this.doForAll(function(e){ e.load(); });
+		}
+	}
+);
+
+GUI._list['Properties tools'].children.last().addItem(new GUI.field({name: 'x gravity', 
+							type: 'text',
+							link: function(val){ 
+								return World.m_gravity.x = (val == undefined) ? World.m_gravity.x : val;
+							}
+						}));
+
+
+GUI._list['Properties tools'].children.last().addItem(new GUI.field({name: 'y gravity', 
+							type: 'text',
+							link: function(val){ 
+								return World.m_gravity.y = (val == undefined) ? World.m_gravity.y : val;
+							}
+						}));
+
 GUI._list['Properties tools'].doForAll(function(that){ that.elem.style.display = 'none';  });
 
 new GUI.container({name: 'Control panel', preElem: 'td_panel'}).init().elem.className += ' panel_container border';
@@ -532,7 +576,7 @@ GUI.children.last().addItem(new GUI.container({name: 'Object list', isSelector: 
 					shape.wrap.elem.className += ' shape_item';
 					shape.wrap.addItem(new GUI.button({name: 'view', tooltip: 'view&nbsp;this', icon: 'visibility'})).elem.className += ' btn_view';
 
-					var shape_item = shape.wrap.addItem(new GUI.button({caption: 'Shape', selectable: true})
+					var shape_item = shape.wrap.addItem(new GUI.button({caption: 'Shape', icon: 'create', selectable: true})
 												).do(
 													function(that){
 														that.events.onClick.push(
