@@ -4,7 +4,7 @@ var Tools = {
 	set: function(id){
 		if (this.selected !== this[id]){
 			if (this.selected != null)
-				this.selected.onchange();
+				this.selected.onchange(id);
 			this._prev = this.selected;
 			this.selected = this[id];
 			this.selected.init();
@@ -375,9 +375,9 @@ Tools.transform = {
 			ctx.strokeStyle = 'rgba(255, 255, 255, 1)';
 			for (var property in this.points) 
 			    if (this.points.hasOwnProperty(property)){
-					ctx.rect((this.points[property].x - .05) * repos, 
-								(this.points[property].y - .05) * repos, 
-								.1 * repos, .1 * repos);
+					ctx.rect((this.points[property].x) * repos - 5, 
+								(this.points[property].y) * repos - 5, 
+								10, 10);
 
 			    }
 			ctx.stroke();		
@@ -414,11 +414,13 @@ Tools.transform = {
 
 Tools.scroll = {
 	name: 'Scroll',
-	init : function(){
+	init : function(){ 
 		Pointer.set_cursor('grab');
+		Pointer.set_cursor('-webkit-grab');
 	},
 	onclick: function(){
 		Pointer.set_cursor('grabbing');
+		Pointer.set_cursor('-webkit-grabbing');
 	},
 	onmove: function(){
 		if (Pointer.isDown && Pointer.hasMoved){
@@ -429,6 +431,7 @@ Tools.scroll = {
 	},
 	onup: function(){
 		Pointer.set_cursor('grab');
+		Pointer.set_cursor('-webkit-grab');
 	},
 	onkeydown: function(e){
 	},
@@ -465,9 +468,11 @@ Tools.movePhysic = {
 	}, 
 	init : function(){
 		Pointer.set_cursor('grab');
+		Pointer.set_cursor('-webkit-grab');
 	},
 	onclick: function(){
 		Pointer.set_cursor('grabbing');
+		Pointer.set_cursor('-webkit-grabbing');
 	},
 	onmove: function(){
 		if(Pointer.isDown && !this.joint && (body = this.getBodyAtMouse())){
@@ -490,6 +495,7 @@ Tools.movePhysic = {
             this.joint = false;
         }
 		Pointer.set_cursor('grab');
+		Pointer.set_cursor('-webkit-grab');
 	},
 	onkeydown: function(e){
 	},
@@ -505,11 +511,96 @@ Tools.movePhysic = {
 	},
 	update: function(){
 	},
+	onchange: function(id){
+		if (id != 'scroll'){
+			for (var i = 0; i < debugDraw.bodies.length; i++)
+				World.DestroyBody(debugDraw.bodies[i]);
+			debugDraw.bodies = [];
+			debugDraw.isRunning = false;
+		}
+	}
+}
+
+Tools.selectPoints = {
+	name: 'Select points',
+	selectedPoints: [],
+	hasSelected: false,
+	aabb: {x: null, xf: null, y: null, yf: null},
+	shape: function () { return (Control.panels.objectList.selectedChild != undefined) ? Control.panels.objectList.selectedChild.link : null; },
+	properties: {
+	},
+	init : function(){
+		this.selectedPoints = [];
+	},
+	onclick: function(){
+		if (this.hasSelected && !Keys.list[Keys.CTRL]){
+			this.hasSelected = false;
+			this.selectedPoints = [];
+		}
+	},
+	onmove: function(){
+		var that = this;
+		if (this.hasSelected && Keys.list[Keys.CTRL] && Pointer.isDown && Pointer.hasMoved){
+			this.selectedPoints.forEach(function (item, index, array) {
+				var dif = (Pointer.DragX - Pointer.rX)
+				item.x  -= (Pointer.DragX - Pointer.rX); 
+				item.y  -= (Pointer.DragY - Pointer.rY);
+				var cInd = that.shape().points.indexOf(item) * 2;
+				that.shape().cpoints[cInd].x -= (Pointer.DragX - Pointer.rX); 
+				that.shape().cpoints[cInd].y  -= (Pointer.DragY - Pointer.rY);
+				that.shape().cpoints[cInd + 1].x -= (Pointer.DragX - Pointer.rX); 
+				that.shape().cpoints[cInd + 1].y  -= (Pointer.DragY - Pointer.rY);
+			});			
+			Pointer.DragX = Pointer.rX; 
+			Pointer.DragY = Pointer.rY;
+			this.shape().update();
+
+		} else if (!this.hasSelected && Pointer.isDown){		
+			var sqWidth = Math.abs(Pointer.DragX - Pointer.rX)/2,
+				sqHeight = Math.abs(Pointer.DragY - Pointer.rY)/2,
+				center = { x: (Pointer.DragX + Pointer.rX) / 2,
+					       y: (Pointer.DragY + Pointer.rY) / 2};
+			this.selectedPoints.forEach(function (item, index, array) {
+				if (!utils.intersectedSquare({x: center.x, y: center.y, size: {height: sqHeight, width:sqWidth}}, item))
+					array.splice(index, 1);
+			});
+			this.shape().points.forEach(function (item, index, array) {
+				if (utils.intersectedSquare({x: center.x, y: center.y, size: {height: sqHeight, width:sqWidth}} , item))
+					if (that.selectedPoints.indexOf(item) < 0)
+						that.selectedPoints.push(item);
+			});
+		}
+	},
+	onup: function(){
+		if (this.selectedPoints.length > 0 && !this.hasSelected)
+			this.hasSelected = true
+	},
+	onkeydown: function(e){
+	},
+	onkeyup: function(key){
+	},
+	render: function(_args){
+		var ctx = _args.ctx, repos = _args.repos;
+		ctx.lineWidth = 1;
+		ctx.strokeStyle = 'rgba(255, 255, 255, 1)';
+		ctx.beginPath();
+		if (!this.hasSelected && Pointer.isDown){
+			ctx.rect(Pointer.DragX * repos, Pointer.DragY * repos, 
+					(Pointer.rX - Pointer.DragX) * repos, (Pointer.rY - Pointer.DragY) * repos);
+		}	
+		if (this.selectedPoints.length > 0){
+			for (var i = 0; i < this.selectedPoints.length; i++){
+				ctx.moveTo(this.selectedPoints[i].x * repos,
+									 this.selectedPoints[i].y * repos);
+				ctx.arc(this.selectedPoints[i].x * repos,
+						 		  this.selectedPoints[i].y * repos, 5, 0, 2*Math.PI);				
+			}
+		}
+		ctx.stroke();	
+	},
+	update: function(){
+	},
 	onchange: function(){
-		for (var i = 0; i < debugDraw.bodies.length; i++)
-			World.DestroyBody(debugDraw.bodies[i]);
-		debugDraw.bodies = [];
-		debugDraw.isRunning = false;
 	}
 }
 /*

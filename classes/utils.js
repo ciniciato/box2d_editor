@@ -42,6 +42,13 @@ utils.intersectedLine_point = function(_point, pLineA, pLineB){
   return ( utils.round(_point.y - pLineA.y - m * (_point.x - pLineA.x), 1000) == 0);
 }
 
+utils.intersectedSquare = function(sqA, sqB){
+  if (sqB.size == undefined) sqB.size = {width: 0, height: 0}
+  if (sqA.size == undefined) sqA.size = {width: 0, height: 0}
+  return (Math.abs(sqA.x - sqB.x) < (sqA.size.width + sqB.size.width) &&
+          Math.abs(sqA.y - sqB.y) < (sqA.size.height + sqB.size.height));
+}
+
 utils.bezierInterpolation = function(t, a, b, c, d) {
   var t2 = t * t,
       t3 = t2 * t,
