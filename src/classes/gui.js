@@ -380,6 +380,23 @@ GUI._list.Toolbar.addItem(
 							 }
 						);
 
+
+GUI._list.Toolbar.addItem(
+							new GUI.button({
+								name: 'Polygon',
+								tooltip: 'Polygon', 
+								icon: 'assets/img/icon_poly.png',
+								selectable: true
+							})
+						).do(
+							function(that){
+							 	that.events.onClick.push(function(that){ 
+							 		Tools.set('polygon');
+									GUI._list['Properties tools'].showUnique('Polygon properties');
+							  });								   
+							 }
+						);
+
 GUI._list.Toolbar.addItem(
 							new GUI.button({
 								name: 'Run',
@@ -533,6 +550,96 @@ GUI._list['Properties tools'].children.last().addItem(new GUI.field({name: 'y gr
 								return World.m_gravity.y = (val == undefined) ? World.m_gravity.y : val;
 							}
 						}));
+
+
+
+
+GUI._list['Properties tools'].addItem(new GUI.container({name: 'Polygon properties'})).do(
+	function(that){
+		that.load = function(){
+			this.doForAll(function(e){ e.load(); });
+		}
+	}
+);
+
+GUI._list['Properties tools'].children.last().addItem(new GUI.field({name: 'sides', 
+							type: 'text',
+							link: function(val){ 
+								if (val == undefined){ 
+									return Tools.polygon.properties.sides;
+								} else{
+									val = Math.round(parseFloat(val));
+									if (!(val > 2)){
+										alert('Value must be bigger than 2');
+										this.load();
+									} else
+										Tools.polygon.properties.sides = val;
+								}
+							}
+						}));
+GUI._list['Properties tools'].children.last().addItem(new GUI.field({name: 'newbody', 
+							type: 'check',
+							link: function(val){ 
+								return Tools.polygon.properties.newbody = (val == undefined) ? Tools.polygon.properties.newbody : val;
+							}
+						}));
+GUI._list['Properties tools'].children.last().addItem(new GUI.field({name: 'density', 
+							type: 'text',
+							link: function(val){ 
+								if (val == undefined){ 
+									return Tools.polygon.properties.density;
+								} else{
+									if (!(parseFloat(val) >= 0)){
+										alert('Value must be positive');
+										this.load();
+									} else
+										Tools.polygon.properties.density = val;
+								}
+							}
+						}));
+GUI._list['Properties tools'].children.last().addItem(new GUI.field({name: 'friction', 
+							type: 'text',
+							link: function(val){ 
+								if (val == undefined){ 
+									return Tools.polygon.properties.friction;
+								} else{
+									if (!(parseFloat(val) >= 0)){
+										alert('Value must be positive');
+										this.load();
+									} else
+										Tools.polygon.properties.friction = val;
+								}
+							}
+						}));
+GUI._list['Properties tools'].children.last().addItem(new GUI.field({name: 'restitution', 
+							type: 'text',
+							link: function(val){ 
+								if (val == undefined){ 
+									return Tools.polygon.properties.restitution;
+								} else{
+									if (!(parseFloat(val) >= 0 && parseFloat(val) <= 1)){
+										alert('Value must be between 0 and 1');
+										this.load();
+									} else
+										Tools.polygon.properties.restitution = val;
+								} 
+							}
+						}));
+GUI._list['Properties tools'].children.last().addItem(new GUI.field({name: 'threshold', 
+							type: 'text',
+							link: function(val){ 
+								if (val == undefined){ 
+									return Tools.polygon.properties.threshold;
+								} else{
+									if (!(parseFloat(val) >= .01 && parseFloat(val) <= 1)){
+										alert('Value must be between 0.01 and 1');
+										this.load();
+									} else
+										Tools.polygon.properties.threshold = val;
+								}
+							}
+						}));
+
 
 GUI._list['Properties tools'].doForAll(function(that){ that.elem.style.display = 'none';  });
 

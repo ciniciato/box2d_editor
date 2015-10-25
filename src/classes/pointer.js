@@ -20,6 +20,19 @@ var Pointer = {
 		return (Math.abs(this.rX - area.position.x) < area.size.width && 
 					Math.abs(this.rY - area.position.y) < area.size.height);
 	},
+	getDifference: function(){
+		var dif = {x: this.DragX - this.rX, y: this.DragY - this.rY};
+		this.DragY = this.rY;
+		this.DragX = this.rX;
+		return dif;
+	},
+	getAngle: function(point){
+		return Math.atan2(this.rY - point.y, this.rX - point.x);
+	},
+	getDistance: function(point){
+		var dx = point.x - this.rX, dy = point.y - this.rY;
+		return Math.sqrt(dx*dx + dy*dy);
+	},
 	render : function(_args){
 		var ctx = _args.ctx, repos = _args.repos;
 		ctx.lineWidth = 2;

@@ -124,7 +124,7 @@ var physic_object = {
 
 		this.add_point = function(point){		
 			//Convert to scale, 1px = 1cm(minimum unity)
-			point = {x: utils.round(point.x, 100), y: utils.round(point.y, 100)};
+			point = {x: utils.round(point.x, 1000), y: utils.round(point.y, 1000)};
 			if (this.points.length > 1 && point.x == this.points[0].x && point.y == this.points[0].y)
 				this.isClosed = true;		
 			this.points.push({ x: point.x,
@@ -183,14 +183,11 @@ var physic_object = {
 		    	if (utils.intersectedLine_point(this.rpoints.last(1), this.rpoints.last(), this.rpoints.last(2)))
 		    		this.rpoints.splice(this.rpoints.length-2, 1);
 		    	setaabb(this.rpoints.last());
-				if (this.cpoints[k+1] != undefined)
+				if (this.cpoints[k+1] != undefined && !(this.cpoints[k].point.x == this.cpoints[k].x && this.cpoints[k].point.y == this.cpoints[k].y &&
+		    			this.cpoints[k+1].point.x == this.cpoints[k+1].x && this.cpoints[k+1].point.y == this.cpoints[k+1].y))
 		    		for (var t = threshold; t <= 1 - threshold; t += threshold) {
 		    			this.rpoints.push(utils.bezierInterpolation(t, this.cpoints[k].point, this.cpoints[k], 
 		    							this.cpoints[k+1], this.cpoints[k+1].point));
-				    	//remove duplicate points and nearer points, convert to minimun unity(0.1 cm)
-				    	if (utils.intersectedLine_point(this.rpoints.last(1), this.rpoints.last(), this.rpoints.last(2)))
-				    		this.rpoints.splice(this.rpoints.length - 2, 1);
-
 		    			setaabb(this.rpoints.last());
 		    		}
 	    	};

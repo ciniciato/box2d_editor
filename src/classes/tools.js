@@ -490,7 +490,7 @@ Tools.movePhysic = {
             this.joint.SetTarget({x: Pointer.rX, y: Pointer.rY});
 	},
 	onup: function(){
-		if(this.joint){
+		if (this.joint){
             World.DestroyJoint(this.joint);
             this.joint = false;
         }
@@ -501,13 +501,7 @@ Tools.movePhysic = {
 	},
 	onkeyup: function(key){
 	},
-	render: function(_args){
-		var ctx = _args.ctx, repos = _args.repos;
-		ctx.lineWidth = 2;
-		ctx.fillStyle = 'rgba(255, 198, 0, .7)';
-		ctx.strokeStyle = 'rgba(0, 0, 0, .7)';
-		ctx.beginPath();
-		ctx.stroke();		
+	render: function(_args){	
 	},
 	update: function(){
 	},
@@ -525,7 +519,6 @@ Tools.selectPoints = {
 	name: 'Select points',
 	selectedPoints: [],
 	hasSelected: false,
-	aabb: {x: null, xf: null, y: null, yf: null},
 	shape: function () { return (Control.panels.objectList.selectedChild != undefined) ? Control.panels.objectList.selectedChild.link : null; },
 	properties: {
 	},
@@ -542,7 +535,7 @@ Tools.selectPoints = {
 		var that = this;
 		if (this.hasSelected && Keys.list[Keys.CTRL] && Pointer.isDown && Pointer.hasMoved){
 			this.selectedPoints.forEach(function (item, index, array) {
-				var dif = (Pointer.DragX - Pointer.rX)
+				var dif  = (Pointer.DragX - Pointer.rX)
 				item.x  -= (Pointer.DragX - Pointer.rX); 
 				item.y  -= (Pointer.DragY - Pointer.rY);
 				var cInd = that.shape().points.indexOf(item) * 2;
@@ -597,6 +590,101 @@ Tools.selectPoints = {
 			}
 		}
 		ctx.stroke();	
+	},
+	update: function(){
+	},
+	onchange: function(){
+	}
+}
+
+
+Tools.polygon = {
+	name: 'Polygon',
+	//type: 'polygon',//required for properties panel
+	isDrawing: false,
+	angle: 0,
+	radius: 0,
+	points: [],
+	shape: function () { return Objects_list.selected; },
+	properties: {
+		sides: '3',
+		newbody: false,
+		threshold: '.05',
+		restitution: '0',
+		friction: '1',
+		density: '1'
+	},
+	init : function(){
+	},
+	onclick: function(){
+		if (!this.isDrawing){
+			for (var i = 0; i < parseFloat(this.properties.sides); i++)
+				this.points[i] = {x: Pointer.rX, y: Pointer.rY};
+			this.isDrawing = true;
+		}
+	},
+	onmove: function(){
+		if (this.isDrawing){
+			this.angle =  Pointer.getAngle({x: Pointer.DragX, y: Pointer.DragY});
+			this.radius = Pointer.getDistance({x: Pointer.DragX, y: Pointer.DragY});
+			var that = this;
+			this.points.forEach(
+				function(item, index, array){
+					var ang = (Math.PI * 2) / parseFloat(that.properties.sides) * index + that.angle;	
+					item.x = Pointer.DragX + that.radius * Math.cos(ang);
+					item.y = Pointer.DragY + that.radius * Math.sin(ang);
+				}
+			);
+		}
+	},
+	onup: function(){
+		if (this.isDrawing){	
+			console.log(this.properties);
+			var shape = Control.objectList.addBody().addShape({
+						properties: {
+									threshold: this.properties.threshold,
+									restitution: this.properties.restitution,
+									friction: this.properties.friction,
+									density: this.properties.density								
+								}
+			}); 
+			shape.isClosed = true;
+			this.points.forEach(
+				function(item, index, array){
+					shape.add_point({x: item.x, y: item.y});				
+				}
+			);
+			shape.add_point({x: this.points[0].x, y: this.points[0].y});	
+			this.isDrawing = false;
+			this.points    = [];
+			this.angle     = 0;
+			this.radius    = 0;		
+			shape.GUI.onClick();
+		}
+	},
+	onkeydown: function(e){
+	},
+	onkeyup: function(key){
+	},
+	render: function(_args){
+		if (this.isDrawing){
+			var ctx = _args.ctx, repos = _args.repos;
+			ctx.lineWidth = 1;
+			ctx.strokeStyle = 'rgba(255, 255, 255, 1)';
+			ctx.beginPath();
+			this.points.forEach(
+				function(item, index, array){
+					ctx.lineTo(item.x * repos,
+							item.y * repos);
+					ctx.arc(item.x * repos,
+							item.y * repos, 5, 0, 2*Math.PI);
+					ctx.moveTo(item.x * repos,
+							item.y * repos);					
+				}
+			);
+			ctx.lineTo(this.points[0].x * repos, this.points[0].y * repos);
+			ctx.stroke();	
+		}	
 	},
 	update: function(){
 	},
