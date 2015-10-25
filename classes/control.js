@@ -147,7 +147,7 @@ Control.render = function(){
 	Camera.clear();	
 	var repos = (World.scale * Camera.scale);
 	if (!debugDraw.isRunning){
-		//Grid.render({ctx: Camera.ctx, repos: repos});
+		Grid.render({ctx: Camera.ctx, repos: repos});
 		this.objectList.render({ctx: Camera.ctx, repos: repos});
 		Tools.render({ctx: Camera.ctx, repos: repos});
 		Pointer.render({ctx: Camera.ctx, repos: repos});
@@ -156,8 +156,8 @@ Control.render = function(){
 }
 
 var Grid = {
-	cellsize: 5,
-	squaresize: 1
+	cellsize: 100,
+	squaresize: 100
 }
 
 //TO FIX: strongerlines when zooming
@@ -168,12 +168,12 @@ Grid.render = function(_args){
 		var pos   = (orientation == 'vertical') ? 'x' : 'y', 
 			size  = (orientation == 'vertical') ? 'width' : 'height',
 			end   = Camera.position[pos] + Camera.size[size],
-			step  = that.cellsize/Math.round(Camera.scale),
+			step  = that.cellsize/Math.round(Camera.scale/100),
 			reset = (Camera.position[pos] - Camera.size[size]) 
 					- (Camera.position[pos] - Camera.size[size]) % step;
 		strongerline = function(i){
 			return false;
-			return (i % (step * that.squaresize) == 0);
+			//return (i % (step * that.squaresize) == 0);
 		}
 		for (var i = reset; i < end; i += step){
 			if (strongerline(i)){

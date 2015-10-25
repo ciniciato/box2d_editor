@@ -95,4 +95,5 @@ Camera.update = function (){
 		this.position_dif.x = this.position.x;
 		this.position_dif.y = this.position.y;
 	}
+	Pointer.onMove();
 } 	
