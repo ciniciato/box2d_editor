@@ -441,13 +441,20 @@ GUI._list['Properties tools'].children.last().addItem(new GUI.field({name: 'poin
 								return Tools.pen.properties.points = (val == undefined) ? Tools.pen.properties.points : val;
 							}
 						}));
+GUI._list['Properties tools'].children.last().addItem(new GUI.field({name: 'newBody', 
+							type: 'check',
+							link: function(val){ 
+								return Tools.pen.properties.newBody = (val == undefined) ? Tools.pen.properties.newBody : val;
+							}
+						}));
 GUI._list['Properties tools'].children.last().addItem(new GUI.field({name: 'density', 
 							type: 'text',
 							link: function(val){ 
 								if (val == undefined){ 
 									return Tools.pen.properties.density;
 								} else{
-									if (!(parseFloat(val) >= 0)){
+									val = parseFloat(val);
+									if (!(val >= 0)){
 										alert('Value must be positive');
 										this.load();
 									} else
@@ -461,7 +468,8 @@ GUI._list['Properties tools'].children.last().addItem(new GUI.field({name: 'fric
 								if (val == undefined){ 
 									return Tools.pen.properties.friction;
 								} else{
-									if (!(parseFloat(val) >= 0)){
+									val = parseFloat(val);
+									if (!(val >= 0)){
 										alert('Value must be positive');
 										this.load();
 									} else
@@ -475,7 +483,8 @@ GUI._list['Properties tools'].children.last().addItem(new GUI.field({name: 'rest
 								if (val == undefined){ 
 									return Tools.pen.properties.restitution;
 								} else{
-									if (!(parseFloat(val) >= 0 && parseFloat(val) <= 1)){
+									val = parseFloat(val);
+									if (!(val >= 0 && val <= 1)){
 										alert('Value must be between 0 and 1');
 										this.load();
 									} else
@@ -489,7 +498,8 @@ GUI._list['Properties tools'].children.last().addItem(new GUI.field({name: 'thre
 								if (val == undefined){ 
 									return Tools.pen.properties.threshold;
 								} else{
-									if (!(parseFloat(val) >= .01 && parseFloat(val) <= 1)){
+									val = parseFloat(val);
+									if (!(val >= .01 && val <= 1)){
 										alert('Value must be between 0.01 and 1');
 										this.load();
 									} else
@@ -506,24 +516,49 @@ GUI._list['Properties tools'].addItem(new GUI.container({name: 'Transform proper
 	}
 );
 
-/*
 GUI._list['Properties tools'].children.last().addItem(new GUI.field({name: 'rotate', 
 							type: 'text',
 							link: function(val){ 
-								return Tools.transform.properties.rotate = (val == undefined) ? Tools.transform.properties.rotate : val;
+								if (val == undefined){ 
+									return Tools.transform.properties.rotate;
+								} else{
+									val = parseFloat(val);
+									if (isNaN(val)){
+										alert('Value must be numeric');
+										this.load();
+									} else
+										Tools.transform.properties.rotate = val;
+								}
 							}
 						}));
-*/
 GUI._list['Properties tools'].children.last().addItem(new GUI.field({name: 'width', 
 							type: 'text',
 							link: function(val){ 
-								return Tools.transform.properties.width = (val == undefined) ? Tools.transform.properties.width : val;
+								if (val == undefined){ 
+									return Tools.transform.properties.width;
+								} else{
+									val = parseFloat(val);
+									if (isNaN(val)){
+										alert('Value must be numeric');
+										this.load();
+									} else
+										Tools.transform.properties.width = val;
+								}
 							}
 						}));
 GUI._list['Properties tools'].children.last().addItem(new GUI.field({name: 'height', 
 							type: 'text',
 							link: function(val){ 
-								return Tools.transform.properties.height = (val == undefined) ? Tools.transform.properties.height : val;
+								if (val == undefined){ 
+									return Tools.transform.properties.height;
+								} else{
+									val = parseFloat(val);
+									if (isNaN(val)){
+										alert('Value must be numeric');
+										this.load();
+									} else
+										Tools.transform.properties.height = val;
+								}
 							}
 						}));
 
@@ -577,10 +612,10 @@ GUI._list['Properties tools'].children.last().addItem(new GUI.field({name: 'side
 								}
 							}
 						}));
-GUI._list['Properties tools'].children.last().addItem(new GUI.field({name: 'newbody', 
+GUI._list['Properties tools'].children.last().addItem(new GUI.field({name: 'newBody', 
 							type: 'check',
 							link: function(val){ 
-								return Tools.polygon.properties.newbody = (val == undefined) ? Tools.polygon.properties.newbody : val;
+								return Tools.polygon.properties.newBody = (val == undefined) ? Tools.polygon.properties.newBody : val;
 							}
 						}));
 GUI._list['Properties tools'].children.last().addItem(new GUI.field({name: 'density', 

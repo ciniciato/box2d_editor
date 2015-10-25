@@ -1,126 +1,85 @@
 var Pointer = {
-	elem       : null,
-	X          : 0,
-	Y          : 0,
-	rX         : 0,
-	rY         : 0,
-	DragX      : 0,
-	DragY      : 0,
+	position         : {x: 0, y: 0},
+	relativePosition : {x: 0, y: 0},
+	dragPosition     : {x: 0, y: 0},
 	wheelDelta : 0,
 	isDown     : false,
 	hasMoved   : false,
 	cursor     : 'default',
-	set_cursor: function(_cursor){
+	setCursor: function(_cursor){
 		if (this.cursor != _cursor){
-			this.elem.style.cursor = _cursor;
+			Camera.canvas.style.cursor = _cursor;
 			this.cursor = _cursor;
 		}
 	},
-	intersect: function(area){
-		return (Math.abs(this.rX - area.position.x) < area.size.width && 
-					Math.abs(this.rY - area.position.y) < area.size.height);
+	isIntersected: function(area){
+		return (Math.abs(this.relativePosition.x - area.position.x) < area.size.width && 
+					Math.abs(this.relativePosition.y - area.position.y) < area.size.height);
 	},
-	getDifference: function(){
-		var dif = {x: this.DragX - this.rX, y: this.DragY - this.rY};
-		this.DragY = this.rY;
-		this.DragX = this.rX;
+	resetDrag: function(){
+		var dif = {x: this.dragPosition.x - this.relativePosition.x, y: this.dragPosition.y - this.relativePosition.y};
+		this.dragPosition.x = this.relativePosition.x;
+		this.dragPosition.y = this.relativePosition.y;
 		return dif;
 	},
-	getAngle: function(point){
-		return Math.atan2(this.rY - point.y, this.rX - point.x);
-	},
 	getDistance: function(point){
-		var dx = point.x - this.rX, dy = point.y - this.rY;
+		var dx = point.x - this.relativePosition.x, dy = point.y - this.relativePosition.y;
 		return Math.sqrt(dx*dx + dy*dy);
+	},
+	getAngle: function(point){
+		return Math.atan2(this.relativePosition.y - point.y, this.relativePosition.x - point.x);
 	},
 	render : function(_args){
 		var ctx = _args.ctx, repos = _args.repos;
 		ctx.lineWidth = 2;
 		ctx.beginPath();
-		ctx.strokeStyle = 'rgba(255, 255, 255, .7)';
-		ctx.arc(this.rX * repos, 
-					 		this.rY * repos, 
-					 		5, 0, 2*Math.PI);
+		ctx.strokeStyle = 'rgba(255, 255, 255, 1)';
+		ctx.arc(this.relativePosition.x * repos, this.relativePosition.y * repos, 5, 0, 2*Math.PI);
 		ctx.stroke();
 	},
-	pointerDown : function (e) {
+	onDown : function (e) {
 		if (!this.isDown) {
 			this.isDown = true;
-			this.evt = e;
-			this.X  = e.pageX - Camera.canvas.position.x;
-			this.Y  = e.pageY - Camera.canvas.position.y;
-			this.DragX = this.rX;
-			this.DragY = this.rY;
-
-			Tools.onclick();
+			this.dragPosition.x = this.relativePosition.x;
+			this.dragPosition.y = this.relativePosition.y;
+			Tools.onClick();
 		}
 	},
-	pointerMove : function(e) {
-		if (e != undefined){
-			this.X  = e.pageX - Camera.canvas.position.x;
-			this.Y  = e.pageY - Camera.canvas.position.y;
-		}
-		this.rX = Camera.position.x - Camera.size.width  + this.X / (World.scale * Camera.scale),
-		this.rY = Camera.position.y - Camera.size.height + this.Y / (World.scale * Camera.scale);
-    	//ortogonal
-    	/*
-    	this.rX = Camera.position.x - Camera.size.width  + this.X / (World.scale * Camera.scale);
-    	this.rX =this.rX - this.rX%(Grid.cellsize/Math.round(Camera.scale));
-		this.rY = Camera.position.y - Camera.size.height + this.Y / (World.scale * Camera.scale);
-    	this.rY =this.rY - this.rY%(Grid.cellsize/Math.round(Camera.scale));
-    	*/
-    	this.hasMoved = (this.rX != this.DragX || this.rY != this.DragY);
-		
-		Tools.onmove();		
+	onMove : function(e) {
+		if (e != undefined)
+		this.position = { x: e.pageX - Camera.canvas.position.x,
+						  y: e.pageY - Camera.canvas.position.y};
+		this.relativePosition = { x: Camera.position.x - Camera.size.width  + this.position.x / (World.scale * Camera.scale),
+						          y: Camera.position.y - Camera.size.height + this.position.y / (World.scale * Camera.scale)};
+    	this.hasMoved = (this.relativePosition != this.dragPosition.x || this.relativePosition.y != this.dragPosition.y);
+		Tools.onMove();		
 	},
-	pointerUp : function(e) {
+	onUp : function(e) {
 		this.isDown = false;
-		Tools.onup();
+		Tools.onUp();
 	},
-	pointerCancel : function(e) {
+	onCancel : function(e) {
 		this.isDown = false;
 	},
 	init : function(){
-		var self = this;
-		this.elem = Camera.canvas;
+		var that = this;
 		if ('ontouchstart' in window) {
-			this.elem.ontouchstart      = function (e) { self.pointerDown(e); return false;  }
-			this.elem.ontouchmove       = function (e) { self.pointerMove(e); return false;  }
-			this.elem.ontouchend        = function (e) { self.pointerUp(e); return false;    }
-			this.elem.ontouchcancel     = function (e) { self.pointerCancel(e); return false;}
+			Camera.canvas.ontouchstart      = function(e) {Pointer.onDown(e)};
+			Camera.canvas.ontouchmove       = function(e) {Pointer.onMove(e)};
+			Camera.canvas.ontouchend        = function(e) {Pointer.onUp(e)};
+			Camera.canvas.ontouchcancel     = function(e) {Pointer.onCancel(e)};
 		}
-		this.elem.addEventListener("mousedown", function (e) {
-			if (
-				e.target === self.elem || 
-				(e.target.parentNode && e.target.parentNode === self.elem) || 
-				(e.target.parentNode.parentNode && e.target.parentNode.parentNode === self.elem)
-			) {
-				if (typeof e.stopPropagation != "undefined") {
-					e.stopPropagation();
-				} else {
-					e.cancelBubble = true;
-				}
-				self.pointerDown(e); 
-			}
-		}, false);
-		this.elem.addEventListener("mousemove", function (e) { 
-			self.pointerMove(e); 
-		}, false);
-		this.elem.addEventListener("mouseup",   function (e) {
-			self.pointerUp(e);
-		}, false);
-		if (window.addEventListener) this.elem.addEventListener('DOMMouseScroll', function(e) { 
-			self.wheelDelta = e.detail * 10;
-	        var value =  Camera.follow.scale - e.detail/30;
-	        if (value >= .5)
-		        Camera.zoom(value);
+		Camera.canvas.addEventListener('mousedown', function(e) {Pointer.onDown(e)}, false);
+		Camera.canvas.addEventListener('mousemove', function(e) {Pointer.onMove(e)}, false);
+		Camera.canvas.addEventListener('mouseup',   function(e) {Pointer.onUp(e)}, false);
+		if (window.addEventListener) Camera.canvas.addEventListener('DOMMouseScroll', function(e) { 
+			that.wheelDelta = e.detail * 10;
+	        Camera.zoom(Camera.follow.scale - that.wheelDelta/30);
 			return false; 
 		}, false); 
-		this.elem.onmousewheel = function () { 
-			self.wheelDelta = -event.wheelDelta * .25;
-	        var value =  Camera.follow.scale - self.wheelDelta/30;
-	        if (value >= .5)
-		        Camera.zoom(value);
+		Camera.canvas.onmousewheel = function () { 
+			that.wheelDelta = -event.wheelDelta * .25;
+	        Camera.zoom(Camera.follow.scale - that.wheelDelta/30);
 			return false; 
 		}
 	}

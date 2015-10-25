@@ -25,24 +25,22 @@ var Keys = {
 Keys.down = function(e){
 	Keys.list[e.which] = 1;
 	if (e.target.tagName != 'INPUT'){
-		Tools.onkeydown(e);
-		//HOT KEYS - not optimized
-		for (var i = 0; i < Keys.hotkey_events.length; i++){
-			for (var k = 0; k < Keys.hotkey_events[i].keys.length; k++){
-				if (e.which == Keys.hotkey_events[i].keys[k]){
-					for (var j = 0; j < Keys.hotkey_events[i].keys.length; j++){
-						if (k != j)
-							if(!Keys.list[Keys.hotkey_events[i].keys[j]])
-								break;
-					}
-					if (j == Keys.hotkey_events[i].keys.length){
-					console.log('once');	
-						Keys.hotkey_events[i].event();
-						break;
+		if (!Tools.onKeyDown(e))
+			for (var i = 0; i < Keys.hotkey_events.length; i++){//HOT KEYS - not optimized
+				for (var k = 0; k < Keys.hotkey_events[i].keys.length; k++){
+					if (e.which == Keys.hotkey_events[i].keys[k]){
+						for (var j = 0; j < Keys.hotkey_events[i].keys.length; j++){
+							if (k != j)
+								if(!Keys.list[Keys.hotkey_events[i].keys[j]])
+									break;
+						}
+						if (j == Keys.hotkey_events[i].keys.length){
+							Keys.hotkey_events[i].event();
+							break;
+						}
 					}
 				}
 			}
-		}
 	}
 	if (e.target === document.body)
 		if ((e.which == Keys.BACKSPACE) ||
@@ -58,7 +56,7 @@ Keys.down = function(e){
 
 Keys.up = function(e) {
 	if (e.target.tagName != 'INPUT')
-		Tools.onkeyup(e);
+		Tools.onKeyUp(e);
 	delete Keys.list[e.which];
 }
 

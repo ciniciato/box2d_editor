@@ -92,7 +92,7 @@ var physic_object = {
 			}
 		};
 	},
-	shape: function(){
+	shape: function(_args){
 		var _args     = (_args == undefined) ? {} : _args;
 		this.type = 'shape';
 		this.isClosed = false;//last point == first point
@@ -122,7 +122,7 @@ var physic_object = {
 		this.isComplex  = false;//true if shape is concave
 		this.isClosed = false;//true if is a closed polygon, last point == first point
 
-		this.add_point = function(point){		
+		this.addPoint = function(point){		
 			//Convert to scale, 1px = 1cm(minimum unity)
 			point = {x: utils.round(point.x, 1000), y: utils.round(point.y, 1000)};
 			if (this.points.length > 1 && point.x == this.points[0].x && point.y == this.points[0].y)
@@ -137,6 +137,14 @@ var physic_object = {
 							   point: this.points.last()});
 			this.update();
 		};
+
+		this.removePoint = function(point){
+			var ind = this.points.indexOf(point);
+			this.cpoints.splice(ind * 2, 1);
+			this.cpoints.splice(ind * 2, 1);
+			this.points.splice(ind, 1);
+			this.update();
+		}
 
 		this.get_origin = function(){
 			return {x: (this.aabb.x + this.aabb.xf) / 2, y: (this.aabb.y + this.aabb.yf) / 2};
