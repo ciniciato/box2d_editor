@@ -39,6 +39,7 @@ html, body {
 	font-size: 12px;
 	font-family: 'Arial';
 	background: #212830;
+	overflow: hidden;
 }
 
 
@@ -48,21 +49,12 @@ html, body {
 	height: calc(100% - 64px);
 }
 
-@media screen and (max-width: 600px) {
-	#toolbar{
-		height: 32px;
-		overflow: hidden;
-	}
-	#workspace{
-		height: calc(100% - 32px);
-	}
-}
-
 #workspace #td_panel{
 	width: 250px;
 	position: relative;
 	float: right;
 	display: inline-block;
+	right: 0;
 }
 
 #workspace #td_canvas{	
@@ -76,6 +68,25 @@ html, body {
 	height: 100%;
 }	
 
+@media screen and (max-width: 700px) {
+	#toolbar{
+		height: 32px;
+		overflow: hidden;
+	}
+
+	#workspace{
+		height: calc(100% - 32px);
+	}
+
+	#workspace #td_canvas{
+		width: 100%;	
+	}
+
+	#workspace #td_panel{
+		position: absolute; 
+		right: -250px;
+	}
+}
 /**GUI STYLE**/
 .gui_container {
 	background: #535353;

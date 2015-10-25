@@ -238,7 +238,6 @@ debugDraw.run = function(){
 			this.prevTool = Tools.selected.name;
 		Tools.set('movePhysic');
 		this.isRunning = true;
-		Pointer.set_cursor('default');
 		this.create();
 	}
 }

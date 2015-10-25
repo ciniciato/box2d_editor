@@ -1,11 +1,10 @@
 //need to be optimzed!
 var Camera = {
-	follow        : {x: 100, y: 100, scale: 10},
-	position      : {x: 100, y: 100},
-	position_dif  : {x: 0, y: 0},
-	size          : {width:  0,
-					 height: 0},
-	scale: 10,
+	follow        : {x: null, y: null, scale: null},
+	position      : {x: null, y: null},
+	position_dif  : {x: null, y: null},
+	size          : {width:  null, height: null},
+	scale  : 100,
 	canvas : null,
 	ctx    : null
 }
@@ -17,7 +16,8 @@ Camera.init = function(){
 	this.ctx = this.canvas.getContext("2d");
 	this.ctx.save();
 	this.resize();
-	this.follow = {x: 100, y: 100, scale: 10};
+	this.position = {x: 1000, y: 1000};
+	this.follow   = {x: 1000, y: 1000, scale: 100};
 }
 
 Camera.resize = function(){
@@ -44,7 +44,8 @@ Camera.set = function(a){
 }
 
 Camera.zoom = function(_value){
-	this.follow.scale = _value;
+	if (_value >= .5)
+		this.follow.scale = _value;
 }
 
 Camera.clear = function(){
@@ -56,8 +57,8 @@ Camera.clear = function(){
 }
 
 Camera.move = function(_d){
-	this.follow.x -= _d.x;
-	this.follow.y -= _d.y;
+	this.follow.x += _d.x;
+	this.follow.y += _d.y;
 }
 
 //fix velocity zoom and move
@@ -93,6 +94,5 @@ Camera.update = function (){
 							    (this.position_dif.y - this.position.y) * repos); 
 		this.position_dif.x = this.position.x;
 		this.position_dif.y = this.position.y;
-		Pointer.pointerMove();
 	}
 } 	
