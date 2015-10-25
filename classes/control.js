@@ -156,7 +156,7 @@ Control.render = function(){
 }
 
 var Grid = {
-	cellsize: 100,
+	cellsize: 1,
 	squaresize: 100
 }
 
