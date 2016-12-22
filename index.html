@@ -19,7 +19,18 @@
             <div id="td_panel"> 
             </div>
         </div>
+		
+		<div id="window" class="gui_container horizontal border">
+			<div class="gui_title border">Image import...</div>
+            <div id="window_options">
+			</div>
+            <div class="canvas">
+				<canvas id="buffer"></canvas>
+            </div>
+		</div>
         
+        <script src="lib/polygon.js"></script>
+		
         <script src="classes/utils.js"></script>
         <script src="classes/world.js"></script>
         <script src="classes/camera.js"></script>
@@ -28,14 +39,21 @@
         <script src="classes/tools.js"></script>
         <script src="classes/pointer.js"></script>
         <script src="classes/keys.js"></script>
+        <script src="classes/importImg.js"></script>
         <script src="classes/gui.js"></script>
         <script>
+		window.onload = function(){
             Control.init();
+          //  Control.render();
+		//	importImg.load('dummy.png');
+				
             loop();
-            function loop() {
+			
+			function loop() {
                 Control.render();
                 requestAnimationFrame(loop);
             }
+		}
         </script>
     </body>
 </html>

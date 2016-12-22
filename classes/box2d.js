@@ -60,7 +60,7 @@ Box2d.create_poly = function(_points, _options, _body){
 	fix_def.friction        = (_options.friction===undefined) ? 1.0 : _options.friction;
 	fix_def.restitution     = (_options.restitution===undefined) ? .0 : _options.restitution;
 	fix_def.userData        = (_options.userData===undefined) ? null : _options.userData;
-	
+		
 	if (complex) {
 		var tmp = utils.process(_points);
 		if (tmp != null) {
