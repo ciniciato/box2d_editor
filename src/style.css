@@ -337,3 +337,17 @@ html, body {
 #toolbar .gui_field .input{
 	width: 50px;
 }
+
+#window {
+	display: none;
+	position: absolute;
+	top: 0;
+	padding: 0;
+	left: 50%;
+	top: 50%;
+	overflow:hidden;
+}
+
+#window .gui_title{
+	text-indent: 15px;
+}

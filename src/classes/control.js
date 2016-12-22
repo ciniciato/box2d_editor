@@ -218,9 +218,51 @@ debugDraw.init = function(){
 	World.SetDebugDraw(this);
 }
 
+function calcPoint(point, angle){
+	var radius = Math.sqrt(point.x*point.x + point.y*point.y),
+		pangle = Math.atan2(point.y, point.x),
+	
+	nx = Math.cos(angle+pangle)*radius,
+	ny = Math.sin(angle+pangle)*radius;
+	
+	return {x: nx, y: ny};
+}
+
 debugDraw.render = function(){
+	var repos = (World.scale * Camera.scale);
+	var ctx = Camera.ctx;
+	
 	if (this.isRunning){
-		World.DrawDebugData();
+		//World.DrawDebugData();
+		
+		ctx.beginPath();
+		for (var b=1; b<World.m_debugDraw.bodies.length; b++)
+		{
+			var body = World.m_debugDraw.bodies[b];
+			
+			var pos = body.GetPosition();	
+			var angle = body.GetAngle();			
+			
+			if (body.shapes!=undefined)
+			for (var s=0; s<body.shapes.length; s++)
+			{
+				var points = body.shapes[s];
+				var ipoint = calcPoint(points[0], angle);			
+				ctx.moveTo(	(ipoint.x + pos.x)*repos,
+							(ipoint.y + pos.y)*repos);
+								
+				for (var p=1; p<points.length; p++){
+					var point = calcPoint(points[p], angle);			
+					ctx.lineTo(	(point.x + pos.x)*repos,
+								(point.y + pos.y)*repos);
+				}			
+				ctx.lineTo(	(ipoint.x + pos.x)*repos,
+							(ipoint.y + pos.y)*repos);
+			}
+		}		
+		ctx.closePath();
+		ctx.stroke();
+	
     	World.update();
 	}
 }
@@ -252,15 +294,27 @@ debugDraw.create = function(){
     for (var k = 0; k < Control.objectList.children.length; k++){
     	var obj = Control.objectList.children[k], origin = obj.get_origin();
     	obj.update();
-        this.bodies.push(Box2d.create_body(origin,
+		var body = Box2d.create_body(origin,
                                      {           type: (obj.properties.type=='static') ? b2Body.b2_staticBody : b2Body.b2_dynamicBody,
                                        angularDamping: parseFloat(obj.properties.angularDamping),
                                         linearDamping: parseFloat(obj.properties.linearDamping),
-                                        fixedRotation: (obj.properties.fixedRotation=='true') ? true : false }));
+                                        fixedRotation: (obj.properties.fixedRotation=='true') ? true : false });
+		body.shapes = [];
+		body.origin = origin;
+		
+        this.bodies.push(body);
+										
         for (var i = 0; i < Control.objectList.children[k].children.length; i++){
         	obj = Control.objectList.children[k].children[i];
         	obj.update();
            	var rpoints = obj.rpoints.removeDuplicates();
+			
+			var diffpoints = [];
+			for(var d = 0; d < rpoints.length; d++)
+				diffpoints.push({x: rpoints[d].x - origin.x, y: rpoints[d].y - origin.y});
+			if (diffpoints.length>0)
+				body.shapes.push(diffpoints);
+			
             var points = [];
             for (var c = 0; c < rpoints.length; c++)
                 points.push({ x: -origin.x + rpoints[c].x ,

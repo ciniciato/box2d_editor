@@ -334,6 +334,42 @@ new GUI.container({name: 'Toolbar', isSelector: true, preElem: 'toolbar'}).init(
 
 GUI._list.Toolbar.addItem(
 							new GUI.button({
+								name: 'Import',
+								tooltip: 'Import', 
+								icon: 'file_upload'
+							})
+						).do(
+	//<input  id="input_file" type="file" accept="image/*" />')
+							function(that){
+								var el = document.createElement('INPUT');
+								el.type = 'file';
+								el.accept = 'image/png';
+								el.style.width = el.style.height = '30px';
+								el.style.position = 'absolute';
+								el.style.top = '0';
+								el.style.left = '0';
+								el.style.opacity = '0';
+								el.addEventListener('change',
+									function(evt){
+										var file = evt.target.files[0];										
+										var reader = new FileReader();
+										reader.onload = (function(theFile) {
+											return function(e) {
+												importImg.load(e.target.result); 
+											}	
+										})(file);
+										reader.readAsDataURL(file);
+									});
+								that.elem.appendChild(el);
+								
+							 	that.events.onClick.push(function(that){ 
+									//IMPORTA
+									});								   
+							 }
+						);
+						
+GUI._list.Toolbar.addItem(
+							new GUI.button({
 								name: 'Pen',
 								tooltip: 'Pen', 
 								icon: 'assets/img/icon_pen.png',
@@ -999,3 +1035,49 @@ GUI.children.last().children.last().addItem(new GUI.container({name: 'Shape prop
 	});
 			
 GUI.children.last().children.last().doForAll(function(that){ that.elem.style.display = 'none'; });
+
+
+
+var d = new GUI.container({name: 'Control panel', preElem: 'window_options'}).init();
+d.elem.className += ' gui_container horizontal border'; 
+
+d.addItem(new GUI.container({})).do(
+	function(that){
+		
+		that.addItem(new GUI.field({name: 'separate by body', 
+									type: 'check',
+									link: function(val){ 
+										importImg.separateByBody = val;	
+									}
+								}));
+
+		that.addItem(new GUI.field({name: 'tresh', 
+									type: 'text',
+									link: function(val){ 
+										if (val == undefined){ 
+											return 2;
+										} else{
+											if (!(parseFloat(val) >= 2 && parseFloat(val) <= 10)){
+												alert('Value must be between 2 and 10');
+												this.load();
+											} else {
+												importImg.threshold = val;
+												importImg.draw();
+											}
+										}										
+									}
+								}));
+								
+		that.addItem(new GUI.button({tooltip: 'Import', icon: 'done'})).events.onClick.push(
+				function(e){	
+					importImg.materialize();
+					document.getElementById('window').style.display='none';
+				});	
+				
+		that.addItem(new GUI.button({tooltip: 'Cancel', icon: 'clear'})).events.onClick.push(
+				function(e){	
+					document.getElementById('window').style.display='none';
+				});	
+
+	});
+
